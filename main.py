@@ -4,53 +4,36 @@ import matplotlib.pyplot as plt
 plt.rcParams['font.family'] ='Malgun Gothic'
 plt.rcParams['axes.unicode_minus'] =False
 import numpy as np
+import seaborn as sns
 
 class IndexAllocator:
     def __init__(self):
         self.parentIdx = 0
         self.childIdx = 0
         
-    def nextSection(self):
+    def getHeadIdx(self) :
+        #섹션 변경
         self.parentIdx += 1
         self.childIdx = 0
         
-    def getSectionIdx(self) :
         #format : 1. / 2. / 3. ...
         return f"{self.parentIdx}. "
     
-    def getIdx(self):
+    def getSubIdx(self):
         self.childIdx += 1
+        
         #format : 1.1 / 1.2 ...
-        return f"{self.parentIdx}.{self.childIdx} " 
+        return f"{self.parentIdx}.{self.childIdx} "
+idx = IndexAllocator()
 
 @st.cache_data
 def load_contents() :
-    #topic - chapter - section
+    #topic - chapter
     contents = {
-        "파이썬 기초": {
-            "자료형": ["자료형"],
-            "제어문": ["if문", "while문", "for문"],
-            "고급": ["함수", "클래스", "모듈", "패키지"]
-        },
-        "Pandas 기초": {
-            "DataFrame": ["데이터프레임 생성", "데이터프레임 속성", "데이터프레임 조회",
-                          "데이터프레임 정렬", "Indexing, Slicing, 조건 필터링"],
-            "Excel/CSV": ["Excel", "CSV"],
-            "Data 전처리": ["데이터 복사", "데이터 결측치", "column 추가", "데이터 삭제", "column 연산", "데이터 변환"],
-            "Data 연결과 병합": ["데이터 연결", "데이터 병합"],
-            "Static" : ["기술 통계", "고급 통계"]
-        },
-        "Matplotlib 기초": {
-            "Matplotlib 기본" : ["기본 사용"],
-            "그래프 그리기?":["그래프 그리기"],
-            "그래프에 text" : ["title, text"],
-            "그래프" : ["label, legend, 축 범위"],
-            "스타일 세부 설정" : ["선,마커,색상"],
-            "Grid, Annotate" : ["grid, annotate"],
-            "Plot" : ["Scatter, line, area, box"],
-            "막대 그래프" : ["막대, 수평막대, histogram"],
-            "이외?" : ["piechart, 3d"]
-        }
+        "파이썬 기초": ["자료형", "제어문", "고급"],
+        "Pandas 기초": ["DataFrame", "Excel/CSV", "Data 전처리", "Data 연결과 병합", "Static"],
+        "Matplotlib 기초":["Matplotlib 기본", "그래프 그리기?", "그래프에 text", "그래프", "스타일 세부 설정", "Grid, Annotate", "Plot", "막대 그래프", "이외?"],
+        "실습예제" : ["예제1", "예제2", "예제3"],
     }
     topics = list(contents.keys())
     return contents, topics
@@ -66,12 +49,9 @@ def init_session_state() :
     if 'chapter' not in st.session_state:
         st.session_state['chapter'] = None
 
-    if 'section' not in st.session_state:
-        st.session_state['section'] = None
-
-    #(page, topic, chapter, section)
+    #(page, topic, chapter)
     return (st.session_state['page'], st.session_state['topic'], 
-            st.session_state['chapter'], st.session_state['section'])
+            st.session_state['chapter'])
 
 def update_session_state(*args) :
     key = args[0]
@@ -81,23 +61,17 @@ def update_session_state(*args) :
         st.session_state['page'] = 'page_topic'
         st.session_state['topic'] = st.session_state['change_topic']
         st.session_state['chapter'] = None
-        st.session_state['section'] = None
     
     #chapter 변경(학습하기)
     elif key == 'change_chapter' :
         st.session_state['page'] = 'page_chapter'
         st.session_state['chapter'] = args[1]['chapter']
     
-    #section 변경(셀렉트박스)
-    elif key == 'change_section' :
-        st.session_state['section'] = st.session_state['change_section']
-    
     #돌아가기
     elif key == 'go_back' :
         st.session_state['page'] = 'page_topic'
         st.session_state['chapter'] = None
-        st.session_state['section'] = None
-
+    
 def show_topic(topic):
     chapters = CONTENTS[topic]
 
@@ -107,6 +81,7 @@ def show_topic(topic):
             "Pandas 기초" : "Pandas 기초 문법을 제공합니다.",
             "Matplotlib 기초" : '''matplotlib.pyplot 모듈은 명령어 스타일로 동작하는 함수의 모음입니다.\n
 matplotlib.pyplot 모듈의 각각의 함수를 사용해서 그래프 영역을 만들고, 몇 개의 선을 표현하고, 레이블로 꾸미는 등 간편하게 그래프를 만들고 변화를 줄 수 있습니다.''',
+            "실습예제" : "실습예제를 제공합니다.",
     }
     st.info(info_txt[topic])
     
@@ -123,31 +98,15 @@ matplotlib.pyplot 모듈의 각각의 함수를 사용해서 그래프 영역을
                         args=('change_chapter', {'chapter':title}),
                         use_container_width=True)
 
-def show_chapter(topic, chapter):
-    sections = CONTENTS[topic][chapter]
-
-    st.title(chapter)
-    
-    st.session_state['section'] = st.selectbox("Choose a section:",
-                                               sections,
-                                               key = 'change_section',
-                                               on_change = update_session_state,
-                                               args=('change_section',),
-                                               label_visibility="hidden")
-    section = st.session_state['section']
-    show_section(topic, chapter, section)
-
-    st.button("돌아가기", on_click=update_session_state, args=('go_back',))
-
 ### pandas에서 사용할 타이타닉 데이터셋
 def pandas_dataset():
-        st.subheader('실습에 사용할 데이터셋')
+        st.subheader(f"{idx.getSubIdx()}실습에 사용할 데이터셋")
         with st.echo():
             import seaborn as sns
             df = sns.load_dataset('titanic')
             df
 
-        st.subheader('**컬럼(columns) 설명**')
+        st.subheader(f"{idx.getSubIdx()}컬럼(columns) 설명")
         st.markdown('- survived: 생존여부 (1: 생존, 0: 사망)\n'
                     '- pclass: 좌석 등급 (1등급, 2등급, 3등급)\n'
                     '- sex: 성별\n'
@@ -165,15 +124,14 @@ def pandas_dataset():
                     '- alone: 혼자 탑승 여부\n')
         st.divider()
 
-def show_section(topic, chapter, section):
-    path = (topic, chapter, section)
-    idx = IndexAllocator()
+def show_chapter(topic, chapter):
+    st.title(chapter)
+    path = (topic, chapter)
 
     ### Python 컨텐츠 작성
-    if path == ("파이썬 기초", "자료형", "자료형") :
-        idx.nextSection()
-        st.header(f"{idx.getSectionIdx()}숫자형")
-        st.subheader(f"{idx.getIdx()}숫자형이란")
+    if path == ("파이썬 기초", "자료형") :
+        st.header(f"{idx.getHeadIdx()}숫자형")
+        st.subheader(f"{idx.getSubIdx()}숫자형이란")
         st.write("숫자형에는 정수형(Integer)과 실수형(Float)이 있습니다. 정수는 양의 정수와 음의 정수, 0이 될 수 있는 숫자입니다. 실수는 소수점이 포함된 숫자를 의미합니다.")
         st.code('''
                 #정수형(Integer)
@@ -186,7 +144,7 @@ def show_section(topic, chapter, section):
                 ''')
         st.divider()
 
-        st.subheader(f"{idx.getIdx()}숫자형의 연산 - 산술 연산자")
+        st.subheader(f"{idx.getSubIdx()}숫자형의 연산 - 산술 연산자")
         st.write('''
                 |연산자	|의미	|
                 |----------|-----------|
@@ -226,7 +184,7 @@ def show_section(topic, chapter, section):
                 ''')
         st.divider()
 
-        st.subheader(f"{idx.getIdx()}숫자형의 연산 - 복합 연산자")
+        st.subheader(f"{idx.getSubIdx()}숫자형의 연산 - 복합 연산자")
         st.write("복합 연산자는 앞서 살펴본 +, - 와 같은 산술 연산자와 대입 연산자(=)를 합쳐 놓은 것입니다. 복합 연산자를 사용하면 코드를 더욱 간결하고 가독성 있게 작성할 수 있습니다.")
         st.write('''
                 | 연산자        | 동치              | 의미               |
@@ -283,9 +241,8 @@ def show_section(topic, chapter, section):
                 ''')
         st.divider()
         
-        idx.nextSection()
-        st.header(f"{idx.getSectionIdx()}문자열")
-        st.subheader(f"{idx.getIdx()}문자열이란")
+        st.header(f"{idx.getHeadIdx()}문자열")
+        st.subheader(f"{idx.getSubIdx()}문자열이란")
         st.write('''문자열(string)이란 연속된 문자들의 나열을 말합니다. 큰따옴표("") 또는 작은따옴표('')로 묶어서 정의합니다.''')
         st.code('''
                 str1 = "Hello World !"
@@ -297,7 +254,7 @@ def show_section(topic, chapter, section):
                 #출력 : Python is Easy
                 ''')
         st.divider()
-        st.subheader(f"{idx.getIdx()}문자열 길이 구하기")
+        st.subheader(f"{idx.getSubIdx()}문자열 길이 구하기")
         st.write("문자열의 길이는 다음과 같이 len 함수를 사용하면 구할 수 있습니다.")
         st.code('''
                 a = "Life is too short"
@@ -306,7 +263,7 @@ def show_section(topic, chapter, section):
                 ''')
         st.divider()
         
-        st.subheader(f"{idx.getIdx()}문자열 인덱싱")
+        st.subheader(f"{idx.getSubIdx()}문자열 인덱싱")
         st.write("인덱싱이란 문자열에서 문자를 추출하는 것입니다. 문자열의 문자에 접급하기 위해서 '문자열[인덱스]' 형식으로 접든할 수 있습니다. 이때 인덱스는 0부터 시작합니다.")
         st.code('''
                 str = "Hello World"
@@ -319,7 +276,7 @@ def show_section(topic, chapter, section):
         st.write("인덱스의 (-) 는 문자열을 뒤에서부터 읽기 위해 사용합니다. 즉, str[-1]은 뒤에서 첫 번째가 되는 문자를 의미하며, str[-5]는 뒤에서 5번째 문자를 의미합니다.")
         st.divider()
 
-        st.subheader(f"{idx.getIdx()}문자열 슬라이싱")
+        st.subheader(f"{idx.getSubIdx()}문자열 슬라이싱")
         st.write('''슬라이싱은 문자열의 일부분을 추출하는 것입니다. 문자열의 슬라이싱은 아래와 같은 형식으로 수행할 수 있습니다.
                  
                         문자열[start : end : step]
@@ -347,7 +304,7 @@ start는 시작 인덱스, end는 끝 인덱스, step은 슬라이싱 간격을 
                 # 출력 : Python
                 ''')
         st.divider()
-        st.subheader(f"{idx.getIdx()}문자열 관련 함수")
+        st.subheader(f"{idx.getSubIdx()}문자열 관련 함수")
         st.write('''
                 - **count()** : 문자 개수 세기
                  ''')
@@ -460,9 +417,8 @@ start는 시작 인덱스, end는 끝 인덱스, step은 슬라이싱 간격을 
         st.write("split 함수는 a.split()처럼 괄호 안에 아무 값도 넣어 주지 않으면 공백([Space], [Tab], [Enter])을 기준으로 문자열을 나누어 줍니다. 만약 b.split(':')처럼 괄호 안에 특정 값이 있을 경우에는 괄호 안의 값을 구분자로 해서 문자열을 나누어 줍니다.")    
         st.divider()
         
-        idx.nextSection()
-        st.header(f"{idx.getSectionIdx()}불")
-        st.subheader(f"{idx.getIdx()}불이란")
+        st.header(f"{idx.getHeadIdx()}불")
+        st.subheader(f"{idx.getSubIdx()}불이란")
         st.write('''
                 불(bool)이란 참(True)과 거짓(False)을 나타내는 자료형입니다. 불 자료형은 다음 2가지 값만을 가질 수 있습니다.
 
@@ -472,7 +428,7 @@ start는 시작 인덱스, end는 끝 인덱스, step은 슬라이싱 간격을 
                 True나 False는 파이썬의 예약어로, true, false와 같이 작성하면 안 되고 첫 문자를 항상 대문자로 작성해야 합니다.
                  ''')
         st.divider()
-        st.subheader(f"{idx.getIdx()}불 자료형 사용법")
+        st.subheader(f"{idx.getSubIdx()}불 자료형 사용법")
         st.write("불 자료형은 조건문의 리턴값으로도 사용됩니다.")
         st.code('''
                 a = 5 > 3
@@ -484,7 +440,7 @@ start는 시작 인덱스, end는 끝 인덱스, step은 슬라이싱 간격을 
                 #출력 : False
                 ''')
         st.divider()
-        st.subheader(f"{idx.getIdx()}자료형의 참과 거짓")
+        st.subheader(f"{idx.getSubIdx()}자료형의 참과 거짓")
         st.write('''
                 문자열, 리스트, 튜플, 딕셔너리 등의 값이 비어 있으면("", [], (), {}) 거짓(False)이 되고 비어 있지 않으면 참(True)이 됩니다. 숫자에서는 그 값이 0일 때 거짓이 됩니다.
                  
@@ -504,9 +460,8 @@ start는 시작 인덱스, end는 끝 인덱스, step은 슬라이싱 간격을 
                  ''')
         st.divider()
         
-        idx.nextSection()
-        st.header(f"{idx.getSectionIdx()}리스트")
-        st.subheader(f"{idx.getIdx()}리스트란")
+        st.header(f"{idx.getHeadIdx()}리스트")
+        st.subheader(f"{idx.getSubIdx()}리스트란")
         st.write("리스트는 데이터들을 편리하게 관리하기 위해 묶어서 관리하는 자료형 중의 하나 입니다. 리스트 안에는 어떠한 자료형도 포함할 수 있습니다.")
         st.code('''
                 a = []  #값이 없는 리스트
@@ -530,7 +485,7 @@ start는 시작 인덱스, end는 끝 인덱스, step은 슬라이싱 간격을 
                 #출력 : [1, 2, ['P', 3]]
                 ''')
         st.divider()
-        st.subheader(f"{idx.getIdx()}리스트의 인덱싱")
+        st.subheader(f"{idx.getSubIdx()}리스트의 인덱싱")
         st.write("리스트 역시 문자열처럼 인덱싱을 적용할 수 있습니다.")
         st.code('''
                 a = [1, 2, 3]
@@ -560,7 +515,7 @@ start는 시작 인덱스, end는 끝 인덱스, step은 슬라이싱 간격을 
                 ''')
         st.divider()
 
-        st.subheader(f"{idx.getIdx()}리스트의 슬라이싱")
+        st.subheader(f"{idx.getSubIdx()}리스트의 슬라이싱")
         st.write("문자열과 마찬가지로 리스트에서도 슬라이싱 기법을 적용할 수 있습니다.")
         st.code('''
                 a = [1, 2, 3, 4, 5]
@@ -574,7 +529,7 @@ start는 시작 인덱스, end는 끝 인덱스, step은 슬라이싱 간격을 
                 #출력 : [3, 4, 5]
                 ''')
         st.divider()
-        st.subheader(f"{idx.getIdx()}리스트 길이 구하기")
+        st.subheader(f"{idx.getSubIdx()}리스트 길이 구하기")
         st.write("리스트 길이를 구하기 위해서는 다음처럼 len 함수를 사용해야 합니다.")
         st.code('''
                 a = [1, 2, 3]
@@ -584,7 +539,7 @@ start는 시작 인덱스, end는 끝 인덱스, step은 슬라이싱 간격을 
         st.write("len은 문자열, 리스트 외에 앞으로 배울 튜플과 딕셔너리에도 사용할 수 있는 함수입니다.")
         
         st.divider()
-        st.subheader(f"{idx.getIdx()}리스트 값 수정하기")
+        st.subheader(f"{idx.getSubIdx()}리스트 값 수정하기")
         st.write("리스트의 인덱스를 통해 요소에 접근하고 값을 수정할 수 있습니다.")
         st.code('''
                 a = [1, 2, 3]
@@ -594,7 +549,7 @@ start는 시작 인덱스, end는 끝 인덱스, step은 슬라이싱 간격을 
                 #출력 : [1, 2, 4]
                 ''')
         st.divider()
-        st.subheader(f"{idx.getIdx()}리스트 요소 삭제하기")
+        st.subheader(f"{idx.getSubIdx()}리스트 요소 삭제하기")
         st.write("del 함수를 사용해 리스트의 요소를 삭제할 수 있습니다. 삭제 또한 인덱스를 통해 요소에 접근합니다.")
         st.code('''
                 a = [1, 2, 3]
@@ -612,7 +567,7 @@ start는 시작 인덱스, end는 끝 인덱스, step은 슬라이싱 간격을 
                 #출력 : [1, 2]
                 ''')
         st.divider()
-        st.subheader(f"{idx.getIdx()}리스트 관련 함수")
+        st.subheader(f"{idx.getSubIdx()}리스트 관련 함수")
         st.write('''
                 - **append()** : 리스트에 요소 추가하기
                  ''')
@@ -749,9 +704,8 @@ start는 시작 인덱스, end는 끝 인덱스, step은 슬라이싱 간격을 
         st.write("extend(x)에서 x에는 리스트만 올 수 있으며 원래의 a 리스트에 x 리스트를 더하게 됩니다.") 
         st.divider()
         
-        idx.nextSection()
-        st.header(f"{idx.getSectionIdx()}튜플")
-        st.subheader(f"{idx.getIdx()}튜플이란")
+        st.header(f"{idx.getHeadIdx()}튜플")
+        st.subheader(f"{idx.getSubIdx()}튜플이란")
         st.write('''
                 튜플(Tuple)은 몇 가지 점을 재외하곤 리스트와 거의 비슷하며 리스트와 다른 점은 다름과 같습니다.
                 
@@ -772,7 +726,7 @@ start는 시작 인덱스, end는 끝 인덱스, step은 슬라이싱 간격을 
                  ''')
         st.divider()
 
-        st.subheader(f"{idx.getIdx()}튜플의 인덱싱")
+        st.subheader(f"{idx.getSubIdx()}튜플의 인덱싱")
         st.write("문자열, 리스트와 마찬가지로 튜플 또한 인덱싱이 가능합니다.")
         st.code('''
                 t1 = (1, 2, 'a', 'b')
@@ -785,7 +739,7 @@ start는 시작 인덱스, end는 끝 인덱스, step은 슬라이싱 간격을 
                 ''')
         st.divider()
 
-        st.subheader(f"{idx.getIdx()}튜플의 슬라이싱")
+        st.subheader(f"{idx.getSubIdx()}튜플의 슬라이싱")
         st.code('''
                 t1 = (1, 2, 'a', 'b')
 
@@ -794,7 +748,7 @@ start는 시작 인덱스, end는 끝 인덱스, step은 슬라이싱 간격을 
                 ''')
         st.divider()
 
-        st.subheader(f"{idx.getIdx()}튜플 길이 구하기")
+        st.subheader(f"{idx.getSubIdx()}튜플 길이 구하기")
         st.code('''
                 t1 = (1, 2, 'a', 'b')
                 print(len(t1))
@@ -802,9 +756,8 @@ start는 시작 인덱스, end는 끝 인덱스, step은 슬라이싱 간격을 
                 ''')   
         st.divider()
         
-        idx.nextSection()
-        st.header(f"{idx.getSectionIdx()}딕셔너리")
-        st.subheader("딕셔너리란")
+        st.header(f"{idx.getHeadIdx()}딕셔너리")
+        st.subheader(f"{idx.getSubIdx()}딕셔너리란")
         st.write('''
                 딕셔너리(dictionary)란 단어 그대로 '사전'이라는 뜻입니다. 딕셔너리의 기본 구조는 아래와 같이 Key와 Value를 한 쌍으로 가지며, 리스트나 튜플처럼 순차적으로 해당 요솟값을 구하지 않고 Key를 통해 Value를 얻는 특징을 가집니다.
         
@@ -813,7 +766,7 @@ start는 시작 인덱스, end는 끝 인덱스, step은 슬라이싱 간격을 
                 ''')
         st.divider()
 
-        st.subheader(f"{idx.getIdx()}딕셔너리 생성하기")
+        st.subheader(f"{idx.getSubIdx()}딕셔너리 생성하기")
         st.write('''
                 |Key	|Value	|
                 |----------|-----------|
@@ -841,7 +794,7 @@ start는 시작 인덱스, end는 끝 인덱스, step은 슬라이싱 간격을 
                 #출력 : 30
                 ''')
         st.divider()
-        st.subheader(f"{idx.getIdx()}딕셔너리 쌍 추가, 삭제하기")
+        st.subheader(f"{idx.getSubIdx()}딕셔너리 쌍 추가, 삭제하기")
         st.code('''
                 #쌍 추가하기
                 person["job"] = "Chef"
@@ -855,7 +808,7 @@ start는 시작 인덱스, end는 끝 인덱스, step은 슬라이싱 간격을 
                 ''')
         st.divider()
 
-        st.subheader(f"{idx.getIdx()}딕셔너리 관련 함수")
+        st.subheader(f"{idx.getSubIdx()}딕셔너리 관련 함수")
         st.write('''
                 - **keys()** : Key 리스트 만들기
                  ''')
@@ -907,9 +860,8 @@ start는 시작 인덱스, end는 끝 인덱스, step은 슬라이싱 간격을 
                 ''')
         st.divider()
         
-        idx.nextSection()
-        st.header(f"{idx.getSectionIdx()}집합")
-        st.subheader(f"{idx.getIdx()}집합이란")
+        st.header(f"{idx.getHeadIdx()}집합")
+        st.subheader(f"{idx.getSubIdx()}집합이란")
         st.write("집합(set)은 집합에 관련된 것을 쉽게 처리하기 위해 만든 자료형입니다.")
         st.code('''
                 #set 키워드 사용해서 집합 만들기
@@ -927,7 +879,7 @@ start는 시작 인덱스, end는 끝 인덱스, step은 슬라이싱 간격을 
 
                  set은 중복을 허용하지 않는 특징 때문에 데이터의 중복을 제거하기 위한 필터로 종종 사용됩니다. 또한, 리스트나 튜플은 순서가 있기(ordered) 때문에 인덱싱을 통해 요솟값을 얻을 수 있지만, set 자료형은 순서가 없기(unordered) 때문에 인덱싱을 통해 요솟값을 얻을 수 없습니다.
                  ''')
-        st.subheader(f"{idx.getIdx()}집합의 연산")
+        st.subheader(f"{idx.getSubIdx()}집합의 연산")
         st.code('''
                 # 연산에 사용할 2개의 set 생성
                 s1 = set([1, 2, 3, 4, 5, 6])
@@ -974,7 +926,7 @@ start는 시작 인덱스, end는 끝 인덱스, step은 슬라이싱 간격을 
                 ''')
         st.divider()
 
-        st.subheader(f"{idx.getIdx()}집합 관련 함수")
+        st.subheader(f"{idx.getSubIdx()}집합 관련 함수")
         st.write('''
                 - **add()** : 값 1개 추가하기
                  ''')
@@ -1008,9 +960,9 @@ start는 시작 인덱스, end는 끝 인덱스, step은 슬라이싱 간격을 
                 #출력 : {1, 3}
                 ''')
     ################################################################################################################################################################################
-    #"제어문": ["if문", "while문", "for문"]
-    elif path == ("파이썬 기초", "제어문", "if문") :
-        st.subheader("if문 기본 구조")
+    elif path == ("파이썬 기초", "제어문") :
+        st.header(f"{idx.getHeadIdx()}if문")
+        st.subheader(f"{idx.getSubIdx()}if문 기본 구조")
         st.write('''
                 - **if** : 조건이 True인 경우에만 실행
                  
@@ -1042,7 +994,7 @@ start는 시작 인덱스, end는 끝 인덱스, step은 슬라이싱 간격을 
 
                  ''')
         st.divider()
-        st.subheader("조건문 유형 - 비교 연산자")
+        st.subheader(f"{idx.getSubIdx()}조건문 유형 - 비교 연산자")
         st.write('''
                 |비교연산자|	설명|
                 |------------|-------------|
@@ -1083,7 +1035,7 @@ start는 시작 인덱스, end는 끝 인덱스, step은 슬라이싱 간격을 
                 #출력 : str1과 str2는 같지 않다
                 ''')
         st.divider()
-        st.subheader("조건문 유형 - and, or, not")
+        st.subheader(f"{idx.getSubIdx()}조건문 유형 - and, or, not")
         st.write('''
                 |연산자|	설명|
                 |------------|-------------|
@@ -1118,7 +1070,7 @@ start는 시작 인덱스, end는 끝 인덱스, step은 슬라이싱 간격을 
                 ''')
         st.divider()
 
-        st.subheader("조건문 유형 - in, not in")
+        st.subheader(f"{idx.getSubIdx()}조건문 유형 - in, not in")
         st.write('''
                 |연산자|	설명|
                 |------------|-------------|
@@ -1141,12 +1093,14 @@ start는 시작 인덱스, end는 끝 인덱스, step은 슬라이싱 간격을 
                     print("False")
                 #출력 : True
                 ''')
-    elif path == ("파이썬 기초", "제어문", "while문") :
-        st.subheader("while문이란")
+        st.divider()
+        
+        st.header(f"{idx.getHeadIdx()}while문")
+        st.subheader(f"{idx.getSubIdx()}while문이란")
         st.write("문장을 반복해서 수행해야 할 경우 while 문을 사용합니다. 그래서 while 문을 ‘반복문’이라고도 부릅니다.")
         st.divider()
 
-        st.subheader("while문의 기본 구조")
+        st.subheader(f"{idx.getSubIdx()}while문의 기본 구조")
         st.write('''
                 while 문은 조건문이 참인 동안 while 문에 속한 문장들을 반복해서 수행하고, 조건문이 거짓이 되는 경우 반복을 중지합니다.
                         
@@ -1171,7 +1125,7 @@ start는 시작 인덱스, end는 끝 인덱스, step은 슬라이싱 간격을 
                 ''')
         st.divider()
 
-        st.subheader("while 문 강제로 빠져나가기")
+        st.subheader(f"{idx.getSubIdx()}while 문 강제로 빠져나가기")
         st.write("while 문은 조건문이 참인 동안 계속 while 문 안의 내용을 반복적으로 수행합니다. 하지만 강제로 while 문을 빠져나가고 싶은 경우엔 break를 사용해 반복문을 빠져나갈 수 있습니다.")
         st.write("아래 코드는 조건문이 True이기 때문에 무한 반복하게 됩니다.")
         st.code('''
@@ -1192,7 +1146,7 @@ start는 시작 인덱스, end는 끝 인덱스, step은 슬라이싱 간격을 
                 # 출력 : 5
                 ''')
         st.divider()
-        st.subheader("while 문의 맨 처음으로 돌아가기")
+        st.subheader(f"{idx.getSubIdx()}while 문의 맨 처음으로 돌아가기")
         st.write("while 문 안의 문장을 수행할 때 입력 조건을 검사해서 조건에 맞지 않으면 while 문을 빠져나갑니다. 그런데 프로그래밍을 하다 보면 while 문을 빠져나가지 않고 while 문의 맨 처음(조건문)으로 다시 돌아가게 만들고 싶은 경우가 생기게 되는데, 이때 사용하는 것이 바로 continue 문입니다.")
         st.code('''
                 a = 0
@@ -1211,8 +1165,10 @@ start는 시작 인덱스, end는 끝 인덱스, step은 슬라이싱 간격을 
                 #9
                 ''')
         st.write("위는 1부터 10까지의 숫자 중 홀수만 출력하는 예시입니다. a가 10보다 작은 동안 a는 1만큼씩 계속 증가합니다. a % 2 == 0(a를 2로 나누었을 때 나머지가 0인 경우)이 참이 되는 경우는 a가 짝수인 경우입니다. 즉, a가 짝수이면 continue 문을 수행하게 됩니다. 이 continue 문은 while 문의 맨 처음인 조건문(a < 10)으로 돌아가게 하는 명령어입니다. 따라서 위 예에서 a가 짝수이면 print(a) 문장은 수행되지 않을 것입니다.")
-    elif path == ("파이썬 기초", "제어문", "for문") :
-        st.subheader("for문이란")
+        st.divider()
+        
+        st.header(f"{idx.getHeadIdx()}for문")
+        st.subheader(f"{idx.getSubIdx()}for문이란")
         st.write('''
                  for문은 정해진 횟수나 범위 안에서 차례대로 대입하며 반복을 수행하는 반복문입니다. 아래와 같은 기본 구조를 가집니다.
                  
@@ -1225,7 +1181,7 @@ start는 시작 인덱스, end는 끝 인덱스, step은 슬라이싱 간격을 
 
                  ''')
         st.divider()
-        st.subheader("for문 사용법")
+        st.subheader(f"{idx.getSubIdx()}for문 사용법")
         st.code('''
                 numList = ['one', 'two', 'three']
 
@@ -1240,7 +1196,7 @@ start는 시작 인덱스, end는 끝 인덱스, step은 슬라이싱 간격을 
         st.write("['one', 'two', 'three'] 리스트의 첫 번째 요소인 'one'이 먼저 i 변수에 대입된 후 print(i) 문장을 수행합니다. 다음에 두 번째 요소 'two'가 i 변수에 대입된 후 print(i) 문장을 수행하고 리스트의 마지막 요소까지 이것을 반복합니다.")
         st.divider()
 
-        st.subheader("for문과 continue문")
+        st.subheader(f"{idx.getSubIdx()}for문과 continue문")
         st.write('''
                 while 문에서 살펴본 continue 문을 for 문에서도 사용할 수 있습니다. 즉, for 문 안의 문장을 수행하는 도중 continue 문을 만나면 for 문의 처음으로 돌아가게 됩니다.
                  ''')
@@ -1258,7 +1214,7 @@ start는 시작 인덱스, end는 끝 인덱스, step은 슬라이싱 간격을 
         st.write("i의 값이 짝수인 경우 continue문이 수행되어 출력이 수행되지 않습니다.")
         st.divider()
 
-        st.subheader("for문과 함께 자주 사용하는 range 함수")
+        st.subheader(f"{idx.getSubIdx()}for문과 함께 자주 사용하는 range 함수")
         st.write("for 문은 숫자 리스트를 자동으로 만들어 주는 range 함수와 함께 사용하는 경우가 많습니다. 다음은 range 함수의 간단한 사용법입니다.")
         st.code('''
                 a = range(10)
@@ -1277,13 +1233,14 @@ start는 시작 인덱스, end는 끝 인덱스, step은 슬라이싱 간격을 
                 # 출력 : 55
                 ''')
         st.write("range(1, 11)은 숫자 1부터 10까지(1 이상 11 미만)의 숫자를 데이터로 가지는 객체입니다. 따라서 위 예에서 i 변수에 숫자가 1부터 10까지 하나씩 차례로 대입되면서 add += i 문장을 반복적으로 수행하고 add 최종적으로 55가 됩니다.")
-    #  "고급": ["함수", "클래스", "모듈", "패키지"]
-    elif path == ("파이썬 기초", "고급", "함수") :
-        st.subheader("함수란")
+    
+    elif path == ("파이썬 기초", "고급") :
+        st.header(f"{idx.getHeadIdx()}함수")
+        st.subheader(f"{idx.getSubIdx()}함수란")
         st.write("코드의 반복을 줄이거나 어떠한 용도를 위해 특정 코드들을 모아둔 것입니다. 한 번 작성해두면 해당 코드가 필요할 때 함수를 호출해서 쉽게 재사용 할 수 있고, 용도에 따라 분리가 가능해 가독성이 좋습니다.")
         st.divider()
 
-        st.subheader("함수의 구조")
+        st.subheader(f"{idx.getSubIdx()}함수의 구조")
         st.write('''def는 함수를 만들 때 사용하는 예약어이며, 함수 이름은 함수를 만드는 사람이 임의로 만들 수 있습니다. 함수 이름 뒤 괄호 안의 매개변수는 이 함수에 입력으로 전달되는 값을 받는 변수입니다. 이렇게 함수를 정의한 후 if, while, for 문 등과 마찬가지로 함수에서 수행할 문장을 입력합니다.''')
         st.code('''
                 def 함수명(매개변수):
@@ -1307,7 +1264,7 @@ start는 시작 인덱스, end는 끝 인덱스, step은 슬라이싱 간격을 
                 ''')
         st.divider()
 
-        st.subheader("매개변수와 인수")
+        st.subheader(f"{idx.getSubIdx()}매개변수와 인수")
         st.write("매개변수는 함수에 입력으로 전달된 값을 받는 변수, 인수는 함수를 호출할 때 전달하는 입력값을 의미합니다.")
 
         st.code('''
@@ -1317,7 +1274,7 @@ start는 시작 인덱스, end는 끝 인덱스, step은 슬라이싱 간격을 
                 print(add(3, 4))  # 3, 4는 인수
                 ''')
         st.divider()
-        st.subheader("return(반환값)")
+        st.subheader(f"{idx.getSubIdx()}return(반환값)")
         st.write("함수는 들어온 입력값을 받은 후 처리를 하여 적절한 값을 리턴해 줍니다. 함수의 형태는 입력값과 리턴값의 존재 유무에 딸 4가지 유형으로 나뉩니다.")
         st.write('''
                 - 입력값과 리턴값이 모두 있는 일반적인 함수
@@ -1362,7 +1319,7 @@ start는 시작 인덱스, end는 끝 인덱스, step은 슬라이싱 간격을 
                 # 출력 : Hi
                 ''')
         st.divider()
-        st.subheader("lambda")
+        st.subheader(f"{idx.getSubIdx()}lambda")
         st.write('''
                  lambda는 함수를 생성할 때 사용하는 예약어로, def와 동일한 역할을 합니다. 보통 함수를 한 줄로 간결하게 만들 때 사용합니다. def를 사용해야 할 정도로 복잡하지 않거나 def를 사용할 수 없는 곳에 주로 사용됩니다.
                  
@@ -1379,16 +1336,15 @@ start는 시작 인덱스, end는 끝 인덱스, step은 슬라이싱 간격을 
         st.write("add는 2개의 인수를 받아 서로 더한 값을 리턴하는 lambda 함수입니다. lambda로 만든 함수는 return 명령어가 없어도 표현식의 결과값을 리턴합니다.")
 
     ### Pandas 컨텐츠 작성
-    elif path == ("Pandas 기초", "DataFrame", "데이터프레임 생성") :
-
-        st.title('데이터프레임 생성') ## 소단원01
+    elif path == ("Pandas 기초", "DataFrame") :
+        st.header(f"{idx.getHeadIdx()}데이터프레임 생성") ## 소단원01
 
         st.markdown('- 2차원 데이터 구조 (Excel 데이터 시트와 비슷합니다.) \n'
             '- 행(row), 열(column)으로 구성되어 있습니다. \n' 		# 공백 2칸
             '- 각 열(column)은 각각의 데이터 타입 (dtype)을 가집니다. \n' 		# 공백 2칸
             )
         
-        st.header('list 통한 생성')
+        st.subheader(f"{idx.getSubIdx()}list 통한 생성")
         st.markdown("**list 를 통해 생성**할 수 있습니다. DataFrame을 만들 때는 **2차원 list를 대입**합니다.")
         with st.echo():
             import pandas as pd
@@ -1407,7 +1363,7 @@ start는 시작 인덱스, end는 끝 인덱스, step은 슬라이싱 간격을 
             df
 
         st.divider()
-        st.header('dictionary 통한 생성')
+        st.subheader(f"{idx.getSubIdx()}dictionary 통한 생성")
         st.markdown('**dictionary를 통한 생성**도 가능합니다.\n'
                     'dictionary의 **key 값이 자동으로 column 명으로 지정**되어 편리합니다.')
         with st.echo():
@@ -1423,8 +1379,7 @@ start는 시작 인덱스, end는 끝 인덱스, step은 슬라이싱 간격을 
 
         st.divider()
 
-    elif path == ("Pandas 기초", "DataFrame", "데이터프레임 속성") :
-        st.title('데이터프레임 속성') # 소단원02
+        st.header(f"{idx.getHeadIdx()}데이터프레임 속성") # 소단원02
 
         st.markdown('DataFrame은 다음과 같은 **속성**을 가집니다.\n'
                     '- **index**: index (기본 값으로 RangeIndex)\n'
@@ -1443,165 +1398,40 @@ start는 시작 인덱스, end는 끝 인덱스, step은 슬라이싱 간격을 
 
         st.divider()
 
-        st.header("**df.index**")
+        st.subheader(f"{idx.getSubIdx()}df.index")
         st.write('''데이터프레임의''', '**인덱스(행)**','''을 출력합니다.''')
         with st.echo():
             df.index
         st.divider()
 
-        st.header("**df.columns**")
+        st.subheader(f"{idx.getSubIdx()}df.columns")
         st.write("데이터프레임의", "**컬럼(열)**", "을 출력합니다.")
         with st.echo():
             df.columns
         st.divider()
 
-        st.header("**df.values**")
+        st.subheader(f"{idx.getSubIdx()}df.values")
         st.write("데이터프레임의 **데이터 값** 을 출력합니다.")
         with st.echo():
             df.values
         st.divider()
 
-        st.header("**df.dtypes**")
+        st.subheader(f"{idx.getSubIdx()}df.dtypes")
         st.write("데이터프레임의 **데이터 타입** 을 출력합니다.")
         with st.echo():
             df.dtypes
         st.divider()
 
-    elif path == ("Pandas 기초", "Excel/CSV", "Excel") :
-        
-        st.title('Excel') ## 소단원01
-        st.header('Excel-불러오기') ## 소단원01 - 세부01
-
-
-        st.write('- Excel 데이터를 바로 읽어들일 수 있습니다. sheet_name 지정시 해당 sheet를 가져옵니다.\n'
-                    '''- [참고] :blue-background[pd.read_excel()]로 데이터 로드시 에러 발생한다면 engine='openpyxl'을 추가합니다.''' 
-                    )
-        st.write('')
-        st.divider()
-        st.subheader('철도 Sheet의 데이터 불러오기')
-
-        with st.echo():
-            import pandas as pd
-            excel = pd.read_excel('data/서울시대중교통/seoul_transportation.xlsx', 
-                                sheet_name='철도')
-            excel.head()
-        
-        
-        import pandas as pd
-        excel = pd.read_excel('data/서울시대중교통/seoul_transportation.xlsx', 
-                                sheet_name='철도')
-        st.write(excel.head())
-
-        st.divider()
-
-        st.subheader('버스 Sheet의 데이터 불러오기')
-
-        with st.echo():
-            import pandas as pd
-            excel = pd.read_excel('data/서울시대중교통/seoul_transportation.xlsx', 
-                                sheet_name='버스', engine='openpyxl')
-            excel.head()
-        excel = pd.read_excel('data/서울시대중교통/seoul_transportation.xlsx', 
-                                sheet_name='버스', engine='openpyxl')
-        st.write(excel.head())
-        st.divider()
-        st.markdown(''':blue-background[sheet_name]을 None으로 지정하면 모든 sheet를 가지고 옵니다.''')
-                    
-        st.write('가지고 올 때는 OrderedDict로 가져오며, :blue-background[keys()]로 시트명을 조회할 수 있습니다.')
-        with st.echo():
-            import pandas as pd
-            excel = pd.read_excel('data/서울시대중교통/seoul_transportation.xlsx', 
-                                sheet_name=None, engine='openpyxl')
-            excel
-
-        st.divider()
-        st.markdown(':blue-background[keys()]를 통해 엑셀이 포함하고 있는 시트를 조회할 수 있습니다.')
-        with st.echo():
-            excel.keys()
-        st.write(excel.keys())
-        st.divider()
-
-        st.header('Excel-저장하기') ## 소단원01 - 세부02
-
-        st.write('DataFrame을 Excel로 저장할 수 있으며, Excel로 저장시 **파일명**을 지정합니다.\n'
-                    '- index=False 옵션은 가급적 꼭 지정하는 옵션입니다. 지정을 안하면 **index가 별도의 컬럼으로 저장**되게 됩니다.\n'
-                    '- sheet_name을 지정하여, 저장할 시트의 이름을 변경할 수 있습니다.\n'
-                    )
-        st.divider()
-
-        with st.echo():
-            import pandas as pd
-            excel = pd.read_excel('data/서울시대중교통/seoul_transportation.xlsx', sheet_name='철도', engine='openpyxl')
-            excel.head()
-        st.write(excel.head())
-            
-        st.divider()
-        
-
-        st.subheader('시트명 없이 저장')
-        code = '''excel.to_excel('sample.xlsx', index=True)'''
-        st.code(code, language="python")
-        st.write('현재 디렉터리에서 sample.xlsx가 저장된 것을 확인할 수 있습니다.')
-        st.divider()
-        
-        st.subheader('시트명 지정하여 저장')
-        code = '''excel.to_excel('sample1.xlsx', index=False, sheet_name='샘플')'''
-        st.write('현재 디렉터리에서 sample1.xlsx가 저장된 것을 확인할 수 있습니다.')
-        st.code(code, language="python")
-        st.divider()
-
-        
-
-    elif path == ("Pandas 기초", "Excel/CSV", "CSV") :
-        st.title('CSV') ## 소단원02
-
-        st.write('한 줄이 한 개의 행에 해당하며, 열 사이에는 **쉼표(,)를 넣어 구분**합니다.\n')
-        st.write('Excel보다 훨씬 가볍고 **차지하는 용량이 적기 때문에 대부분의 파일 데이터는 csv 형태**로 제공됩니다.')
-
-        st.header('CSV-불러오기') ## 소단원02- 세부01
-        with st.echo():
-            import pandas as pd
-            df = pd.read_csv('data/서울시주민등록인구/seoul_population.csv')
-            df
-        st.divider()
-
-        st.header('CSV-저장하기') ## 소단원02 - 세부02
-        st.markdown('저장하는 방법은 excel과 유사합니다.\n'
-                    '다만, csv파일 형식에는 sheet_name 옵션은 없습니다.')
-
-        with st.echo():
-            import pandas as pd
-            df = pd.read_csv('data/서울시주민등록인구/seoul_population.csv')
-            df
-        st.divider()
-
-        st.write(''':blue-background[to_csv()]로 csv 파일형식으로 저장할 수 있습니다.''')
-        code='''df.to_csv('sample.csv', index=False)'''
-        st.code(code, language="python")
-        st.write('현재 디렉터리에서 sample.csv가 저장된 것을 확인할 수 있습니다.')
-        st.divider()
-
-        st.markdown("읽어드린 **Excel 파일도 csv**로 저장할 수 있습니다.")
-        with st.echo():
-            import pandas as pd
-            excel = pd.read_excel('data/서울시대중교통/seoul_transportation.xlsx', 
-                                sheet_name='버스')
-        code = '''excel.to_csv('sample1.csv', index=False)'''
-        st.code(code, language="python")
-        st.write('현재 디렉터리에서 sample1.csv가 저장된 것을 확인할 수 있습니다.')
-        st.divider()
-
-    elif path == ("Pandas 기초", "DataFrame", "데이터프레임 조회"):
-
-        st.title('데이터프레임 조회') ## 소단원03
+        st.header(f"{idx.getHeadIdx()}데이터프레임 조회") ## 소단원03
 
         st.write('데이터프레임(DataFrame)에서 가장 많이 사용하는 **조회, 정렬 그리고 조건필터**에 대해 알아보겠습니다.')
         st.write('조회, 정렬, 조건필터 기능은 엑셀에서도 가장 많이 활용하는 기능입니다.')
         st.write('Pandas는 조회, 정렬, 조건필터의 기능을 매우 편리하게 사용할 수 있도록 지원합니다.')
+        st.divider()
 
         pandas_dataset()
 
-        st.subheader('head() 앞 부분 / tail() 뒷 부분 조회')
+        st.subheader(f"{idx.getSubIdx()}head() 앞 부분 / tail() 뒷 부분 조회")
         st.write('- default 옵션 값으로 **5개의 행이 조회**됩니다.')
         st.write('- 괄호 안에 숫자를 넣어 명시적으로 조회하고 싶은 행의 갯수를 지정할 수 있습니다.')
         
@@ -1626,7 +1456,7 @@ start는 시작 인덱스, end는 끝 인덱스, step은 슬라이싱 간격을 
         st.write(df.tail(7))
         st.divider()
 
-        st.subheader('info()')
+        st.subheader(f"{idx.getSubIdx()}info()")
         st.write('- 컬럼별 정보(information)를 보여줍니다.')
         st.write('- 데이터의 갯수, 그리고 데이터 타입(dtype)을 확인할 때 사용합니다.')
         st.code('''df.info()''')
@@ -1639,7 +1469,7 @@ start는 시작 인덱스, end는 끝 인덱스, step은 슬라이싱 간격을 
         st.write('''- **category** 타입도 있습니다. category 타입은 문자열이지만, '남자' / '여자'처럼 카테고리화 할 수 있는 컬럼을 의미 합니다''')
         st.divider()
 
-        st.subheader('value_counts()')
+        st.subheader(f"{idx.getSubIdx()}value_counts()")
         st.write('- column 별 **값의 분포를 확인**할 때 사용합니다.')
         st.write('- **남자, 여자, 아이의 데이터 분포를 확인**하고 싶다면 다음과 같이 실행합니다.')
 
@@ -1648,7 +1478,7 @@ start는 시작 인덱스, end는 끝 인덱스, step은 슬라이싱 간격을 
         st.write(df['who'].value_counts())
         st.divider()
 
-        st.subheader('속성: Attributes')
+        st.subheader(f"{idx.getSubIdx()}Attributes : 속성")
         st.write('속성 값은 **함수형으로 조회하지 않습니다.**')
         st.write('자주 활용하는 DataFrame은 **속성 값**들은 다음과 같습니다.')
         st.markdown('- ndim\n' '- shape\n' '- index\n' '- columns\n' '- values\n')
@@ -1678,16 +1508,16 @@ start는 시작 인덱스, end는 끝 인덱스, step은 슬라이싱 간격을 
         with st.echo():
             df.values
 
-    elif path == ("Pandas 기초", "DataFrame", "데이터프레임 정렬"):
-        st.header('데이터프레임 정렬') ## 소단원04
+        st.header(f"{idx.getHeadIdx()}데이터프레임 정렬") ## 소단원04
 
         st.write('데이터프레임(DataFrame)에서 가장 많이 사용하는 **조회, 정렬 그리고 조건필터**에 대해 알아보겠습니다.')
         st.write('조회, 정렬, 조건필터 기능은 엑셀에서도 가장 많이 활용하는 기능입니다.')
         st.write('Pandas는 조회, 정렬, 조건필터의 기능을 매우 편리하게 사용할 수 있도록 지원합니다.')
+        st.divider()
 
         pandas_dataset()
 
-        st.subheader('sort_index: index 정렬')
+        st.subheader(f"{idx.getSubIdx()}sort_index: index 정렬")
         st.write('- index 기준으로 정렬합니다. (기본 오름차순이 적용되어 있습니다.)')
         st.write('내림차순 정렬을 적용하려면, :blue-background[ascending=False]를 옵션 값으로 설정합니다.')
 
@@ -1702,7 +1532,7 @@ start는 시작 인덱스, end는 끝 인덱스, step은 슬라이싱 간격을 
         st.write(df.sort_index(ascending=False).head(5))
         st.divider()
 
-        st.subheader('sort_values: 값에 대한 정렬')
+        st.subheader(f"{idx.getSubIdx()}sort_values: 값에 대한 정렬")
         st.write('- 값을 기준으로 행을 정렬합니다.')
         st.write('- by에 기준이 되는 행을 설정합니다.')
         st.write('- by에 2개 이상의 컬럼을 지정하여 정렬할 수 있습니다.')
@@ -1731,35 +1561,33 @@ start는 시작 인덱스, end는 끝 인덱스, step은 슬라이싱 간격을 
         st.write(df.sort_values(by=['fare', 'age'], ascending=[False, True]).head())
         st.divider()
 
-            
-    elif path == ("Pandas 기초", "DataFrame", "Indexing, Slicing, 조건 필터링"):
-        
-        st.title('Indexing, Slicing, 조건 필터링') ## 소단원05
+        st.header(f"{idx.getHeadIdx()}Indexing, Slicing, 조건 필터링") ## 소단원05
 
         st.write('데이터프레임(DataFrame)에서 가장 많이 사용하는 **조회, 정렬 그리고 조건필터**에 대해 알아보겠습니다.')
         st.write('조회, 정렬, 조건필터 기능은 엑셀에서도 가장 많이 활용하는 기능입니다.')
         st.write('Pandas는 조회, 정렬, 조건필터의 기능을 매우 편리하게 사용할 수 있도록 지원합니다.')
+        st.divider()
 
         pandas_dataset()
 
         import seaborn as sns
         df = sns.load_dataset('titanic')
 
-        st.header('loc - indexing / slicing')
+        st.subheader(f"{idx.getSubIdx()}loc - indexing / slicing")
         st.write('- indexing과 slicing을 할 수 있습니다.')
         st.write('- slicing은 [**시작(포함): 끝(포함)**] 규칙에 유의합니다. 둘 다 포함 합니다.')
 
-        st.subheader('**indexing 예시**')
+        st.write('**01-1. indexing 예시**')
         st.code('''df.loc[5, 'class']''')
         st.write(df.loc[5, 'class'])
         st.divider()
 
-        st.subheader('**fancy indexing 예시**')
+        st.write('**01-2. fancy indexing 예시**')
         st.code('''df.loc[2:5, ['age', 'fare', 'who']]''')
         st.write(df.loc[2:5, ['age', 'fare', 'who']])
         st.divider()
 
-        st.subheader('**slicing 예시**')
+        st.write('**01-3. slicing 예시**')
         st.code('''df.loc[2:5, 'class':'deck'].head()''')
         st.write(df.loc[2:5, 'class':'deck'].head())
 
@@ -1767,7 +1595,7 @@ start는 시작 인덱스, end는 끝 인덱스, step은 슬라이싱 간격을 
         st.write(df.loc[:6, 'class':'deck'])
         st.divider()
 
-        st.subheader('**loc - 조건 필터**')
+        st.write('**01-4. loc - 조건 필터**')
         st.write('boolean index을 만들어 조건에 맞는 데이터만 추출해 낼 수 있습니다.')
         st.code('''cond = (df['age'] >= 70)\ncond''')
         cond = (df['age'] >= 70)
@@ -1777,14 +1605,10 @@ start는 시작 인덱스, end는 끝 인덱스, step은 슬라이싱 간격을 
         st.write(df.loc[cond])
         st.divider()
 
-        st.subheader('**loc - 다중조건**')
+        st.write('**01-5. loc - 다중조건**')
         st.write('다중 조건은 먼저 condition(조건)을 정의하고 **&** 와 **|** 연산자로 **복합 조건을 생성**합니다.')
         st.code(
-            '''# 조건1 정의
-            cond1 = (df['fare'] > 30)
-
-            # 조건2 정의
-            cond2 = (df['who'] == 'woman')''')
+            '''# 조건1 정의\ncond1 = (df['fare'] > 30)\n# 조건2 정의\ncond2 = (df['who'] == 'woman')''')
         cond1 = (df['fare'] > 30)
         cond2 = (df['who'] == 'woman')
         st.code('''df.loc[cond1 & cond2]''')
@@ -1795,7 +1619,7 @@ start는 시작 인덱스, end는 끝 인덱스, step은 슬라이싱 간격을 
         st.write(df.loc[cond1 | cond2])
         st.divider()
 
-        st.write('**조건 필터 후 데이터 대입**')
+        st.write('**01-6. 조건 필터 후 데이터 대입**')
         st.code('''cond = (df['age'] >= 70)\ncond''')
         cond = (df['age'] >= 70)
         st.write(cond)
@@ -1804,7 +1628,7 @@ start는 시작 인덱스, end는 끝 인덱스, step은 슬라이싱 간격을 
         st.write(df.loc[cond])
         st.divider()
 
-        st.write('**나이 컬럼**만 가져옵니다.')
+        st.write('**01-7. 나이 컬럼**만 가져옵니다.')
         with st.echo():
             df.loc[cond, 'age']
         st.divider()
@@ -1816,29 +1640,29 @@ start는 시작 인덱스, end는 끝 인덱스, step은 슬라이싱 간격을 
             df.loc[cond]
         st.divider()
 
-        st.header('iloc')
+        st.subheader(f"{idx.getSubIdx()}iloc")
         st.write('- :blue-background[loc]와 유사하지만, index만 허용합니다.')
         st.write('loc와 마찬가지고, indexing / slicing 모두 가능합니다.')
         st.code('''df.head()''')
         st.write(df.head())
         st.divider()
 
-        st.subheader('**indexing**')
+        st.write('**02-1. indexing**')
         st.code('''df.iloc[1, 3]''')
         st.write(df.iloc[1, 3])
         st.divider()
 
-        st.subheader('**Fancy Indexing**')
+        st.write('**02-2. Fancy Indexing**')
         st.code('''df.iloc[[0, 3, 4], [0, 1, 5, 6]]''')
         st.write(df.iloc[[0, 3, 4], [0, 1, 5, 6]])
         st.divider()
 
-        st.subheader('**Slicing**')
+        st.write('**02-3. Slicing**')
         st.code('''df.iloc[:3, :5]''')
         st.write(df.iloc[:3, :5])
         st.divider()
 
-        st.subheader('**isin**')
+        st.write('**02-4. isin**')
         st.write('특정 값의 포함 여부는 isin 함수를 통해 비교가 가능합니다. (파이썬의 in 키워드는 사용 불가 합니다.)')
         with st.echo():
             import pandas as pd
@@ -1861,14 +1685,162 @@ start는 시작 인덱스, end는 끝 인덱스, step은 슬라이싱 간격을 
         with st.echo():
             sample.loc[condition]
 
-    elif path == ("Pandas 기초", "Data 전처리", "데이터 복사"):
+    ## Excel/CSV        
+
+    elif path == ("Pandas 기초", "Excel/CSV") :
+        
+        st.header(f"{idx.getHeadIdx()}Excel") ## 소단원01
+        st.subheader(f"{idx.getSubIdx()}Excel-불러오기") ## 소단원01 - 세부01
+        
+
+        st.write('- Excel 데이터를 바로 읽어들일 수 있습니다. sheet_name 지정시 해당 sheet를 가져옵니다.\n'
+                    '''- [참고] :blue-background[pd.read_excel()]로 데이터 로드시 에러 발생한다면 engine='openpyxl'을 추가합니다.''' 
+                    )
+        st.write('- 실습을 위해 **아래의 버튼**을 클릭하여 데이터를 다운로드 해주세요')
+        
+        with open('data/서울시대중교통/seoul_transportation.xlsx', "rb") as template_file:
+            template_byte = template_file.read()
+
+        st.download_button(label="download data",
+                            type="primary",
+                            data=template_byte,
+                           file_name = "seoul_transportation.xlsx"
+        )
+        st.write('다운 받은 데이터를 현재 작업 중인 jupyter 디렉터리로 이동해주세요')
+
+        st.divider()
+        
+        st.write('**철도 Sheet의 데이터 불러오기**')
+
+        with st.echo():
+            import pandas as pd
+            excel = pd.read_excel('data/서울시대중교통/seoul_transportation.xlsx', 
+                                sheet_name='철도')
+            excel.head()
+        
+        
+        import pandas as pd
+        excel = pd.read_excel('data/서울시대중교통/seoul_transportation.xlsx', 
+                                sheet_name='철도')
+        st.write(excel.head())
+
+        # st.divider()
+
+        st.write('**버스 Sheet의 데이터 불러오기**')
+
+        with st.echo():
+            import pandas as pd
+            excel = pd.read_excel('data/서울시대중교통/seoul_transportation.xlsx', 
+                                sheet_name='버스', engine='openpyxl')
+            excel.head()
+        excel = pd.read_excel('data/서울시대중교통/seoul_transportation.xlsx', 
+                                sheet_name='버스', engine='openpyxl')
+        st.write(excel.head())
+        st.divider()
+        st.markdown(''':blue-background[sheet_name]을 None으로 지정하면 모든 sheet를 가지고 옵니다.''')
+                    
+        st.write('가지고 올 때는 OrderedDict로 가져오며, :blue-background[keys()]로 시트명을 조회할 수 있습니다.')
+        with st.echo():
+            import pandas as pd
+            excel = pd.read_excel('data/서울시대중교통/seoul_transportation.xlsx', 
+                                sheet_name=None, engine='openpyxl')
+            excel
+
+        st.divider()
+        st.markdown(':blue-background[keys()]를 통해 엑셀이 포함하고 있는 시트를 조회할 수 있습니다.')
+        with st.echo():
+            excel.keys()
+        st.write(excel.keys())
+        st.divider()
+
+        st.subheader(f"{idx.getSubIdx()}Excel-저장하기") ## 소단원01 - 세부02
+
+        st.write('DataFrame을 Excel로 저장할 수 있으며, Excel로 저장시 **파일명**을 지정합니다.\n'
+                    '- index=False 옵션은 가급적 꼭 지정하는 옵션입니다. 지정을 안하면 **index가 별도의 컬럼으로 저장**되게 됩니다.\n'
+                    '- sheet_name을 지정하여, 저장할 시트의 이름을 변경할 수 있습니다.\n'
+                    )
+        st.divider()
+
+        with st.echo():
+            import pandas as pd
+            excel = pd.read_excel('data/서울시대중교통/seoul_transportation.xlsx', sheet_name='철도', engine='openpyxl')
+            excel.head()
+        st.write(excel.head())
+            
+        st.divider()
+
+        st.write('**시트명 없이 저장**')
+        code = '''excel.to_excel('sample.xlsx', index=True)'''
+        st.code(code, language="python")
+        st.write('현재 디렉터리에서 sample.xlsx가 저장된 것을 확인할 수 있습니다.')
+        st.divider()
+        
+        st.write('**시트명 지정하여 저장**')
+        code = '''excel.to_excel('sample1.xlsx', index=False, sheet_name='샘플')'''
+        st.write('현재 디렉터리에서 sample1.xlsx가 저장된 것을 확인할 수 있습니다.')
+        st.code(code, language="python")
+        st.divider()
+
+        st.header(f"{idx.getHeadIdx()}CSV") ## 소단원02
+
+        st.write('한 줄이 한 개의 행에 해당하며, 열 사이에는 **쉼표(,)를 넣어 구분**합니다.\n')
+        st.write('Excel보다 훨씬 가볍고 **차지하는 용량이 적기 때문에 대부분의 파일 데이터는 csv 형태**로 제공됩니다.')
+        st.write('- 실습을 위해 **아래의 버튼**을 클릭하여 데이터를 다운로드 해주세요')
+        
+        with open('data/서울시주민등록인구/seoul_population.csv', "rb") as template_file:
+            template_byte = template_file.read()
+
+        st.download_button(label="download data",
+                            data=template_byte,
+                            type="primary",
+                           file_name = "seoul_population.csv")
+
+        st.write('다운 받은 데이터를 현재 작업 중인 jupyter 디렉터리로 이동해주세요')
+        st.divider()
+        
+        st.subheader(f"{idx.getSubIdx()}CSV-불러오기") ## 소단원02- 세부01
+        with st.echo():
+            import pandas as pd
+            df = pd.read_csv('data/서울시주민등록인구/seoul_population.csv')
+            df
+        st.divider()
+
+        st.subheader(f"{idx.getSubIdx()}CSV-저장하기") ## 소단원02 - 세부02
+        st.markdown('저장하는 방법은 excel과 유사합니다.\n'
+                    '다만, csv파일 형식에는 sheet_name 옵션은 없습니다.')
+
+        with st.echo():
+            import pandas as pd
+            df = pd.read_csv('data/서울시주민등록인구/seoul_population.csv')
+            df
+        st.divider()
+
+        st.write(''':blue-background[to_csv()]로 csv 파일형식으로 저장할 수 있습니다.''')
+        code='''df.to_csv('sample.csv', index=False)'''
+        st.code(code, language="python")
+        st.write('현재 디렉터리에서 sample.csv가 저장된 것을 확인할 수 있습니다.')
+        st.divider()
+
+        st.markdown("읽어드린 **Excel 파일도 csv**로 저장할 수 있습니다.")
+        with st.echo():
+            import pandas as pd
+            excel = pd.read_excel('data/서울시대중교통/seoul_transportation.xlsx', 
+                                sheet_name='버스')
+        code = '''excel.to_csv('sample1.csv', index=False)'''
+        st.code(code, language="python")
+        st.write('현재 디렉터리에서 sample1.csv가 저장된 것을 확인할 수 있습니다.')
+        st.divider()
+
+    elif path == ("Pandas 기초", "Data 전처리"):
+        st.header(f"{idx.getHeadIdx()}데이터 복사") ## 소단원01
+        
         st.write('Pandas DataFrame의 **복사(Copy), 결측치 처리**, 그리고 row, column의 **추가, 삭제, 컬럼간 연산, 타입의 변환**을 다뤄보겠습니다.')
+        st.divider()
+
         pandas_dataset()
 
         import seaborn as sns
         df = sns.load_dataset('titanic')
-
-        st.title('데이터 복사') ## 소단원01
 
         st.write('DataFrame을 **복제**합니다. 복제한 DataFrame을 수정해도 **원본에는 영향을 미치지 않습니다.**')
         code = '''df.head()'''
@@ -1901,9 +1873,7 @@ start는 시작 인덱스, end는 끝 인덱스, step은 슬라이싱 간격을 
         st.write(df.head())
         st.divider()
 
-    elif path == ("Pandas 기초", "Data 전처리", "데이터 결측치"):
-
-        st.title('데이터 결측치') ## 소단원02
+        st.header(f"{idx.getHeadIdx()}데이터 결측치") ## 소단원02
 
         import seaborn as sns
         df = sns.load_dataset('titanic')
@@ -1918,18 +1888,18 @@ start는 시작 인덱스, end는 끝 인덱스, step은 슬라이싱 간격을 
         st.write('4. 결측 데이터 **제거하기**')
         st.divider()
 
-        st.header('결측치 확인 - isnull(), isnan()')
+        st.subheader(f"{idx.getSubIdx()}결측치 확인 - isnull(), isnan()")
         st.write('컬럼(column)별 결측치의 갯수를 확인하기 위해서는 :blue-background[sum()] 함수를 붙혀주면 됩니다.')
         st.write(':blue-background[sum()]은 Pandas의 통계 관련 함수이며, 통계 관련 함수는 **Static** 챕터에서 알 수 있습니다.')
         st.divider()
-        st.subheader('**isnull()**')
+        st.write('**isnull()**')
         
         code = 'df.isnull().sum()'
         st.code(code)
         st.write(df.isnull().sum())
         st.divider()
 
-        st.subheader('**isna()**')
+        st.write('**isna()**')
         st.write('isnull() 과 동작이 완전 같습니다. 편한 것으로 써주세요. (심지어 도큐먼트도 같습니다)')
         code ='df.isna().sum()'
         st.code(code)
@@ -1942,14 +1912,14 @@ start는 시작 인덱스, end는 끝 인덱스, step은 슬라이싱 간격을 
         st.write(df.isnull().sum().sum())    
         st.divider()
 
-        st.header('결측치가 아닌 데이터 확인 - notnull()')
+        st.subheader(f"{idx.getSubIdx()}결측치가 아닌 데이터 확인 - notnull()")
         st.write(':blue-background[notnull()]은 :blue-background[isnull()]과 정확히 **반대** 개념입니다.')
         code = 'df.notnull().sum()'
         st.code(code)
         st.write(df.notnull().sum())
         st.divider()
 
-        st.header('결측 데이터 필터링')
+        st.subheader(f"{idx.getSubIdx()}결측 데이터 필터링")
 
         st.write(':blue-background[isnull()] 함수가 결측 데이터를 찾는 **boolean index** 입니다.')
         st.write('즉, :blue-background[loc]에 적용하여 조건 필터링을 걸 수 있습니다.')
@@ -1958,7 +1928,7 @@ start는 시작 인덱스, end는 끝 인덱스, step은 슬라이싱 간격을 
         st.write(df.loc[df['age'].isnull()])
         st.divider()
 
-        st.header('결측치 채우기 - fillna()')
+        st.subheader(f"{idx.getSubIdx()}결측치 채우기 - fillna()")
         st.write(':blue-background[fillna()]를 활용하면 결측치에 대하여 일괄적으로 값을 채울 수 있습니다.')
         code = ''' # 다시 원본 DataFrame 로드\ndf = sns.load_dataset('titanic')'''
         st.code(code)
@@ -1986,7 +1956,7 @@ start는 시작 인덱스, end는 끝 인덱스, step은 슬라이싱 간격을 
         st.write(df1.tail())    
         st.divider()
 
-        st.header('통계값으로 채우기')
+        st.subheader(f"{idx.getSubIdx()}통계값으로 채우기")
         code = '''df1 = df.copy()'''
         st.code(code)
         df1 = df.copy()
@@ -1995,13 +1965,13 @@ start는 시작 인덱스, end는 끝 인덱스, step은 슬라이싱 간격을 
         st.write(df1.tail())
         st.divider()
 
-        st.subheader('평균으로 채우기')
+        st.write('**05-1. 평균으로 채우기**')
         code = '''df1['age'].fillna(df1['age'].mean()).tail()'''
         st.code(code)
         st.code(df1['age'].fillna(df1['age'].mean()).tail())
         st.divider()
 
-        st.subheader('최빈값으로 채우기')
+        st.write('**05-2. 최빈값으로 채우기**')
         code = '''df1['deck'].mode()'''
         st.code(code)
         st.write(df1['deck'].mode())
@@ -2019,7 +1989,7 @@ start는 시작 인덱스, end는 끝 인덱스, step은 슬라이싱 간격을 
         
         st.divider()
 
-        st.subheader('NaN 값이 있는 데이터 제거하기 (dropna)')
+        st.subheader(f"{idx.getSubIdx()}NaN 값이 있는 데이터 제거하기 (dropna)")
         code = '''df1 = df.copy()
             df1.tail()'''
         st.code(code)
@@ -2046,10 +2016,9 @@ start는 시작 인덱스, end는 끝 인덱스, step은 슬라이싱 간격을 
         df1.dropna(how='all')
         st.write(df1)
 
-    elif path == ("Pandas 기초", "Data 전처리", "column 추가"):
-        st.title('column 추가') ## 소단원03
+        st.header(f"{idx.getHeadIdx()}column 추가") ## 소단원03
 
-        st.header('새로운 column 추가') 
+        st.subheader(f"{idx.getSubIdx()}새로운 column 추가") 
 
         import seaborn as sns
         df = sns.load_dataset('titanic')
@@ -2083,8 +2052,7 @@ start는 시작 인덱스, end는 끝 인덱스, step은 슬라이싱 간격을 
         st.write(df1.head())
         st.divider()
 
-    elif path == ("Pandas 기초", "Data 전처리", "데이터 삭제"):
-        st.title('데이터 삭제') ## 소단원04
+        st.header(f"{idx.getHeadIdx()}데이터 삭제") ## 소단원04
         import seaborn as sns
         df = sns.load_dataset('titanic')
         df1 = df.copy()
@@ -2093,7 +2061,7 @@ start는 시작 인덱스, end는 끝 인덱스, step은 슬라이싱 간격을 
         st.write('삭제는 **행(row) 삭제와 열(column) 삭제**로 구분할 수 있습니다.')
         st.divider()
 
-        st.subheader('행 (row) 삭제')
+        st.subheader(f"{idx.getSubIdx()}행 (row) 삭제")
         st.write('행 삭제시 **index를 지정하여 삭제**합니다.')
         
         code = 'df1.drop(1)'
@@ -2113,7 +2081,7 @@ start는 시작 인덱스, end는 끝 인덱스, step은 슬라이싱 간격을 
             
         st.divider()
 
-        st.subheader('열 (column) 삭제')
+        st.subheader(f"{idx.getSubIdx()}열 (column) 삭제")
         st.code('df1.head()')
         st.write(df1.head())
         st.divider()
@@ -2136,8 +2104,7 @@ start는 시작 인덱스, end는 끝 인덱스, step은 슬라이싱 간격을 
         st.code('df1.head()')
         st.write(df1.head())
 
-    elif path == ("Pandas 기초", "Data 전처리", "column 연산"):
-        st.title('column 연산')
+        st.header(f"{idx.getHeadIdx()}column 연산")
 
         st.write('**컬럼(column) 과 컬럼 사이의 연산을 매우 쉽게 적용**할 수 있습니다.')
         
@@ -2167,8 +2134,7 @@ start는 시작 인덱스, end는 끝 인덱스, step은 슬라이싱 간격을 
         st.write(df1.loc[df1['age'].isnull(), 'deck':].head())
         st.divider()
     
-    elif path == ("Pandas 기초", "Data 전처리", "데이터 변환"):
-        st.title('데이터 변환')
+        st.header(f"{idx.getHeadIdx()}데이터 변환")
 
         st.write('- 데이터 변환에서는 category 타입으로 변환하는 방법에 대해 알아보겠습니다.')
         st.write('- category로 변경시 사용하는 메모리를 줄일 수 있습니다.')
@@ -2177,7 +2143,7 @@ start는 시작 인덱스, end는 끝 인덱스, step은 슬라이싱 간격을 
         import io
         st.divider()
 
-        st.header('category 타입')
+        st.subheader(f"{idx.getSubIdx()}category 타입")
         
         st.code('''df1 = df.copy()\ndf1.head(2)''')
         df1 = df.copy()
@@ -2190,7 +2156,7 @@ start는 시작 인덱스, end는 끝 인덱스, step은 슬라이싱 간격을 
         st.text(s)
         st.divider()
 
-        st.header('category로 변경')
+        st.subheader(f"{idx.getSubIdx()}category로 변경")
         st.write(':blue-background[category]로 변경시에는 Categories가 같이 출력됩니다.')
         st.code('''df1['who'].astype('category').head()''')
         st.write(df1['who'].astype('category').head())
@@ -2211,11 +2177,11 @@ start는 시작 인덱스, end는 끝 인덱스, step은 슬라이싱 간격을 
 
     
 
-    elif path == ("Pandas 기초", "Data 연결과 병합", "데이터 연결"):
+    elif path == ("Pandas 기초", "Data 연결과 병합"):
 
         import pandas as pd
 
-        st.header('데이터 연결') ## 소단원01
+        st.header(f"{idx.getHeadIdx()}데이터 연결") ## 소단원01
 
         st.write('여러 개의 DataFrame으로 이루어진 데이터를 합치는 방법인 concat()(연결), merge()(병합)에 대하여 다뤄보겠습니다.')
         st.write('- :blue-background[concat()]은 2개 이상의 DataFrame을 행 혹은 열 방향으로 연결합니다.')
@@ -2243,7 +2209,7 @@ start는 시작 인덱스, end는 끝 인덱스, step은 슬라이싱 간격을 
         st.write('단순하게 지정한 DataFrame을 이어서 연결합니다.')
         st.divider()
 
-        st.subheader('행 방향으로 연결')
+        st.subheader(f"{idx.getSubIdx()}행 방향으로 연결")
         st.write('기본 값인 :blue-background[axis=0]이 지정되어 있고, 행 방향으로 연결합니다.')
         st.write('또한, 같은 column을 알아서 찾아서 데이터를 연결합니다.')
 
@@ -2278,7 +2244,7 @@ start는 시작 인덱스, end는 끝 인덱스, step은 슬라이싱 간격을 
         st.write(pd.concat([gas11, gas22], ignore_index=True))
         st.divider()
 
-        st.subheader('열 방향으로 연결')
+        st.subheader(f"{idx.getSubIdx()}열 방향으로 연결")
         st.write('열(column) 방향으로 연결 가능하며, :blue-background[axis=1]로 지정합니다.')
         code='''# 실습을 위한 DataFrame 임의 분할\n +
             gas1 = gas.iloc[:, :5]\n +
@@ -2296,9 +2262,7 @@ start는 시작 인덱스, end는 끝 인덱스, step은 슬라이싱 간격을 
         st.code('pd.concat([gas1, gas2], axis=1)')
         st.write(pd.concat([gas1, gas2], axis=1))
         
-    elif path == ("Pandas 기초", "Data 연결과 병합", "데이터 병합"):    
-        
-        st.header('데이터 병합') ## 소단원02
+        st.header(f"{idx.getHeadIdx()}데이터 병합") ## 소단원02
         import pandas as pd
 
         st.write('여러 개의 DataFrame으로 이루어진 데이터를 합치는 방법인 concat() - 연결, merge() - 병합에 대하여 알아보겠습니다.')
@@ -2325,7 +2289,7 @@ start는 시작 인덱스, end는 끝 인덱스, step은 슬라이싱 간격을 
         
         st.divider()
 
-        st.subheader('병합하는 방법 4가지')
+        st.subheader(f"{idx.getSubIdx()}병합하는 방법 4가지")
 
         st.write(':blue-background[how] 옵션 값을 지정하여 4가지 방식으로 병합을 할 수 있으며, 각기 다른 결과를 냅니다.')
         st.write('''- **how** : '{':blue-background[left], :blue-background[right], :blue-background[outer], :blue-background[inner]'}',''')
@@ -2346,7 +2310,7 @@ start는 시작 인덱스, end는 끝 인덱스, step은 슬라이싱 간격을 
         st.write(pd.merge(df1, df2, how='outer'))
         st.divider()
 
-        st.subheader('병합하려는 컬럼의 이름이 다른 경우')
+        st.subheader(f"{idx.getSubIdx()}병합하려는 컬럼의 이름이 다른 경우")
         with st.echo():
             df1 = pd.DataFrame({
             '이름': ['박세리', '이대호', '손흥민', '김연아', '마이클조던'],
@@ -2368,9 +2332,9 @@ start는 시작 인덱스, end는 끝 인덱스, step은 슬라이싱 간격을 
         st.code(code)
         st.write(pd.merge(df1, df2, left_on='이름', right_on='고객명'))
 
-    elif path == ("Pandas 기초", "Static", "기술 통계"):
+    elif path == ("Pandas 기초", "Static"):
         
-        st.title('기술 통계') # 소단원01
+        st.header(f"{idx.getHeadIdx()}기술 통계") # 소단원01
 
         st.write('**통계**는 데이터 분석에서 굉장히 중요한 요소입니다.')
         st.write('데이터에 대한 통계 계산식을 Pandas 함수로 제공하기 때문에 쉽게 통계 값을 산출할 수 있습니다.')
@@ -2383,8 +2347,7 @@ start는 시작 인덱스, end는 끝 인덱스, step은 슬라이싱 간격을 
         # for col in df.select_dtypes(include=['object']):
         #     df[col] = df[col].astype('category')
 
-
-        st.subheader('describe() - 요약통계')
+        st.subheader(f"{idx.getSubIdx()}describe() - 요약통계")
 
         st.write('전반적인 주요 통계를 확인할 수 있습니다.')
         st.write('기본 값으로 **수치형(Numberical) 컬럼**에 대한 통계표를 보여줍니다.')
@@ -2420,7 +2383,7 @@ start는 시작 인덱스, end는 끝 인덱스, step은 슬라이싱 간격을 
         # for col in df.select_dtypes(include=['object']):
         #     df[col] = df[col].astype('category')
 
-        st.subheader('count() - 개수')
+        st.subheader(f"{idx.getSubIdx()}count() - 개수")
 
         st.write('데이터의 개수')
         st.write('DataFrame 전체의 개수를 구하는 경우')
@@ -2448,7 +2411,7 @@ start는 시작 인덱스, end는 끝 인덱스, step은 슬라이싱 간격을 
 
         st.divider()
 
-        st.subheader('mean - 조건별 평균')
+        st.subheader(f"{idx.getSubIdx()}mean - 조건별 평균")
         st.write('성인 남성의 나이의 평균 구하기')
         code = '''condition = (df['adult_male'] == True)\ndf.loc[condition, 'age'].mean()'''
         st.code(code)
@@ -2457,7 +2420,7 @@ start는 시작 인덱스, end는 끝 인덱스, step은 슬라이싱 간격을 
 
         st.divider()
 
-        st.subheader('median() - 중앙값')
+        st.subheader(f"{idx.getSubIdx()}median() - 중앙값")
         st.write('데이터의 중앙 값을 출력 합니다. 데이터를 **오름차순 정렬하여 중앙에 위치한 값**입니다.')
         st.write('이상치(outlier)가 존재하는 경우, mean()보다 median()을 대표값으로 더 선호합니다.')
 
@@ -2483,7 +2446,7 @@ start는 시작 인덱스, end는 끝 인덱스, step은 슬라이싱 간격을 
 
         st.divider()
 
-        st.subheader('sum() - 합계')
+        st.subheader(f"{idx.getSubIdx()}sum() - 합계")
 
         st.write('데이터의 **합계**입니다. 문자열 column은 모든 데이터가 붙어서 출력될 수 있습니다.')
         st.code('''df.loc[:, ['age', 'fare']].sum()''')
@@ -2495,7 +2458,7 @@ start는 시작 인덱스, end는 끝 인덱스, step은 슬라이싱 간격을 
 
         st.divider()
 
-        st.subheader('var() - 분산')
+        st.subheader(f"{idx.getSubIdx()}var() - 분산")
 
         st.latex(r'''
         \text{분산} = \frac{\sum_{i=1}^n (X_i - \bar{X})^2}{n-1}
@@ -2511,7 +2474,7 @@ start는 시작 인덱스, end는 끝 인덱스, step은 슬라이싱 간격을 
         my_var = ((df['fare'].values - fare_mean) ** 2).sum() / (df['fare'].count() - 1)
         st.write(my_var)
         st.divider()
-        st.subheader('std() - 표준편차')
+        st.subheader(f"{idx.getSubIdx()}std() - 표준편차")
         st.latex(r'''
         \text{표준편차} = \sqrt{\text{분산}} = \sqrt{\frac{\sum_{i=1}^n (X_i - \bar{X})^2}{n-1}}
                 ''')
@@ -2524,7 +2487,7 @@ start는 시작 인덱스, end는 끝 인덱스, step은 슬라이싱 간격을 
         st.write(df['fare'].std())
         st.divider()
 
-        st.subheader('min() - 최소값, max() - 최대값')
+        st.subheader(f"{idx.getSubIdx()}min() - 최소값, max() - 최대값")
         st.code(
          '''# 최소값
             df['age'].min()
@@ -2534,7 +2497,7 @@ start는 시작 인덱스, end는 끝 인덱스, step은 슬라이싱 간격을 
         st.write(df['age'].max())
         st.divider()
 
-        st.subheader('mode() - 최빈값')
+        st.subheader(f"{idx.getSubIdx()}mode() - 최빈값")
         st.write('최빈값은 **가장 많이 출현한 데이터**를 의미합니다.')
         st.code('''df['who'].mode()''')
         st.write(df['who'].mode())   
@@ -2543,9 +2506,8 @@ start는 시작 인덱스, end는 끝 인덱스, step은 슬라이싱 간격을 
         st.code('''df['deck'].mode()''')
         st.write(df['deck'].mode())
         st.divider()
-    
-    elif path == ("Pandas 기초", "Static", "고급 통계"):
-        st.title('고급 통계')
+        
+        st.header(f"{idx.getHeadIdx()}고급 통계")
 
         st.write('"고급 통계 함수"는 기술 통계보다 더 복잡한 연산이나 특수한 목적을 가진 함수입니다.')
 
@@ -2555,7 +2517,7 @@ start는 시작 인덱스, end는 끝 인덱스, step은 슬라이싱 간격을 
         df = sns.load_dataset('titanic')
 
         
-        st.subheader('agg - aggregation: 통합 통계 적용 (복수의 통계 함수 적용)')
+        st.subheader(f"{idx.getSubIdx()}agg - aggregation: 통합 통계 적용 (복수의 통계 함수 적용)")
         st.write('단일 컬럼에 agg 적용')
         st.code('''df['age'].agg(['min', 'max', 'count','mean'])''')
         st.write(df['age'].agg(['min', 'max', 'count','mean']))       
@@ -2566,7 +2528,7 @@ start는 시작 인덱스, end는 끝 인덱스, step은 슬라이싱 간격을 
     
         st.divider()
 
-        st.subheader('quantile() - 분위')
+        st.subheader(f"{idx.getSubIdx()}quantile() - 분위")
         st.write('**Quantile이란 주어진 데이터를 동등한 크기로 분할하는 지점**Quantile이란 주어진 데이터를 동등한 크기로 분할하는 지점을 말합니다.')
         st.write('10%의 경우 0.1을, 80%의 경우 0.8을 대입하여 값을 구합니다.')
         st.code('''# 10% quantile\ndf['age'].quantile(0.1)''')
@@ -2578,19 +2540,19 @@ start는 시작 인덱스, end는 끝 인덱스, step은 슬라이싱 간격을 
 
         st.divider()
 
-        st.subheader('unique() - 고유값, nunique() - 고유값 개수')
+        st.subheader(f"{idx.getSubIdx()}unique() - 고유값, nunique() - 고유값 개수")
         st.write('고유값과 고유값의 개수를 구하고자 할 때 사용합니다.')
 
         st.write('**unique()**')
         st.code('''df['who'].unique()''')
-        st.write(df['who'].unique())    
+        st.write(df['who'].unique())   
         st.divider()
         st.write('**nonique()**: 고유값의 개수를 출력합니다.')
         st.code('''df['who'].nunique()''')
         st.write(df['who'].nunique())
         st.divider()
 
-        st.subheader('cumsum() - 누적합, cumprod() - 누적곱')
+        st.subheader(f"{idx.getSubIdx()}cumsum() - 누적합, cumprod() - 누적곱")
 
         st.write('누적되는 합계를 구할 수 있습니다.')
         st.code('''df['age'].cumsum()''')
@@ -2603,7 +2565,7 @@ start는 시작 인덱스, end는 끝 인덱스, step은 슬라이싱 간격을 
         st.write(df['age'].cumprod())
         st.divider()
 
-        st.subheader('corr() - 상관관계')
+        st.subheader(f"{idx.getSubIdx()}corr() - 상관관계")
         st.write(':blue-background[corr()]로 컬럼(column)별 **상관관계**를 확인할 수 있습니다.')
 
         st.write('- **-1~1 사이의 범위**를 가집니다.')
@@ -2620,30 +2582,11 @@ start는 시작 인덱스, end는 끝 인덱스, step은 슬라이싱 간격을 
         st.code('''numeric_df.corr()['survived']''')
         st.write(numeric_df.corr()['survived']) 
         st.divider()
-
-        
-    elif path == ("Matplotlib 기초", "대단원 01", "소단원01") :
-        st.write("예시코드 1")
-    
-        with st.echo():
-            import pandas as pd
-            df = pd.DataFrame()
-        st.divider()
-
-        st.write("예시코드 1")
-        with st.echo():
-            import pandas as pd
-            df = pd.DataFrame()
-        st.divider()
-
-    ### 박은수
     ### Matplotlib 컨텐츠 작성
-    ### Matplotlib 컨텐츠 작성
-    elif path == ("Matplotlib 기초", "Matplotlib 기본", "기본 사용"):
-        idx.nextSection()
-        st.header(f"{idx.getSectionIdx()}기본 사용")
+    elif path == ("Matplotlib 기초", "Matplotlib 기본"):
+        st.header(f"{idx.getHeadIdx()}기본 사용")
         st.write("Matplotlib 라이브러리를 이용해서 그래프를 그리는 일반적인 방법에 대해 소개합니다.")
-        st.subheader(f"{idx.getIdx()}기본 그래프 그리기")
+        st.subheader(f"{idx.getSubIdx()}기본 그래프 그리기")
         with st.echo():
             import matplotlib.pyplot as plt
 
@@ -2665,7 +2608,7 @@ start는 시작 인덱스, end는 끝 인덱스, step은 슬라이싱 간격을 
         plt.close()
         st.divider()
 
-        st.subheader(f"{idx.getIdx()}스타일 지정하기")
+        st.subheader(f"{idx.getSubIdx()}스타일 지정하기")
         with st.echo():
             import matplotlib.pyplot as plt
 
@@ -2679,7 +2622,7 @@ start는 시작 인덱스, end는 끝 인덱스, step은 슬라이싱 간격을 
         plt.close()
         st.divider()
 
-        st.subheader(f"{idx.getIdx()}여러 개의 그래프 그리기")
+        st.subheader(f"{idx.getSubIdx()}여러 개의 그래프 그리기")
         st.write("이후 다중 그래프 그리기 단원에서 자세히 학습할 수 있습니다.")
         with st.echo():
             import matplotlib.pyplot as plt
@@ -2694,9 +2637,8 @@ start는 시작 인덱스, end는 끝 인덱스, step은 슬라이싱 간격을 
         st.pyplot(plt)
         plt.close()
 
-        idx.nextSection()
-        st.header(f"{idx.getSectionIdx()}숫자 입력하기")
-        st.subheader(f"{idx.getIdx()}기본 사용")
+        st.header(f"{idx.getHeadIdx()}숫자 입력하기")
+        st.subheader(f"{idx.getSubIdx()}기본 사용")
         with st.echo():
             import matplotlib.pyplot as plt
 
@@ -2711,7 +2653,7 @@ start는 시작 인덱스, end는 끝 인덱스, step은 슬라이싱 간격을 
         plt.close()
         st.divider()
 
-        st.subheader(f"{idx.getIdx()}x, y 값 입력하기")
+        st.subheader(f"{idx.getSubIdx()}x, y 값 입력하기")
         with st.echo():
             import matplotlib.pyplot as plt
 
@@ -2722,7 +2664,7 @@ start는 시작 인덱스, end는 끝 인덱스, step은 슬라이싱 간격을 
         plt.close()
         st.divider()
 
-        st.subheader(f"{idx.getIdx()}레이블이 있는 데이터 사용하기")
+        st.subheader(f"{idx.getSubIdx()}레이블이 있는 데이터 사용하기")
         with st.echo(): 
             import matplotlib.pyplot as plt
 
@@ -2735,10 +2677,9 @@ start는 시작 인덱스, end는 끝 인덱스, step은 슬라이싱 간격을 
         st.pyplot(plt)
         plt.close()
     
-    elif path == ("Matplotlib 기초", "그래프 그리기?", "그래프 그리기"):
-        idx.nextSection()
-        st.header(f"{idx.getSectionIdx()}그래프 그리기")
-        st.subheader(f"{idx.getIdx()}단일 그래프")
+    elif path == ("Matplotlib 기초", "그래프 그리기?"):
+        st.header(f"{idx.getHeadIdx()}그래프 그리기")
+        st.subheader(f"{idx.getSubIdx()}단일 그래프")
         with st.echo():
             import matplotlib.pyplot as plt
             import numpy as np
@@ -2753,7 +2694,7 @@ start는 시작 인덱스, end는 끝 인덱스, step은 슬라이싱 간격을 
         plt.close()
         st.divider()
 
-        st.subheader(f"{idx.getIdx()}다중 그래프(Multiple graphs)")
+        st.subheader(f"{idx.getSubIdx()}다중 그래프(Multiple graphs)")
         st.write("1개의 canvas 안에 다중 그래프 그리기")
         with st.echo():
             import matplotlib.pyplot as plt
@@ -2789,9 +2730,8 @@ start는 시작 인덱스, end는 끝 인덱스, step은 슬라이싱 간격을 
         st.pyplot(plt)
         plt.close()
 
-        idx.nextSection()
-        st.header(f"{idx.getSectionIdx()}여러개의 Plot")
-        st.subheader(f"{idx.getIdx()}여러개의 Plot을 그리는 방법(Subplot)")
+        st.header(f"{idx.getHeadIdx()}여러개의 Plot")
+        st.subheader(f"{idx.getSubIdx()}여러개의 Plot을 그리는 방법(Subplot)")
         st.write("subplot(row, column, index)")
         with st.echo():
             import matplotlib.pyplot as plt
@@ -2851,7 +2791,7 @@ start는 시작 인덱스, end는 끝 인덱스, step은 슬라이싱 간격을 
         plt.close()
         st.divider()
 
-        st.subheader(f"{idx.getIdx()}여러개의 plot을 그리는 방법(subplots)")
+        st.subheader(f"{idx.getSubIdx()}여러개의 plot을 그리는 방법(subplots)")
         st.write("**s가 더 붙습니다.**")
         st.write("plt.subplots(행의 갯수, 열의 갯수)")
         with st.echo():
@@ -2876,13 +2816,12 @@ start는 시작 인덱스, end는 끝 인덱스, step은 슬라이싱 간격을 
         st.pyplot(plt)
         plt.close()
 
-    elif path == ("Matplotlib 기초", "그래프에 text", "title, text"):
-        idx.nextSection()
-        st.header(f"{idx.getSectionIdx()}Title")
+    elif path == ("Matplotlib 기초", "그래프에 text"):
+        st.header(f"{idx.getHeadIdx()}Title")
         st.write("**matplotlib.pyplot** 모듈의 **title()** 함수를 이용해서 그래프의 타이틀 (Title)을 설정할 수 있습니다.")
         st.write("그래프의 타이틀을 표시하고 위치를 조절하는 방법, 그리고 타이틀의 폰트와 스타일을 설정하는 방법에 대해 알아봅니다.")
         
-        st.subheader(f"{idx.getIdx()}기본 사용")
+        st.subheader(f"{idx.getSubIdx()}기본 사용")
         with st.echo():
             import matplotlib.pyplot as plt
             import numpy as np
@@ -2902,7 +2841,7 @@ start는 시작 인덱스, end는 끝 인덱스, step은 슬라이싱 간격을 
         plt.close()
         st.divider()
 
-        st.subheader(f"{idx.getIdx()}위치와 오프셋 지정하기")
+        st.subheader(f"{idx.getSubIdx()}위치와 오프셋 지정하기")
         with st.echo():
             import matplotlib.pyplot as plt
             import numpy as np
@@ -2924,7 +2863,7 @@ start는 시작 인덱스, end는 끝 인덱스, step은 슬라이싱 간격을 
         plt.close()
         st.divider()
 
-        st.subheader(f"{idx.getIdx()}폰트 지정하기")
+        st.subheader(f"{idx.getSubIdx()}폰트 지정하기")
         with st.echo():
             import matplotlib.pyplot as plt
             import numpy as np
@@ -2953,7 +2892,7 @@ start는 시작 인덱스, end는 끝 인덱스, step은 슬라이싱 간격을 
         plt.close()
         st.divider()
 
-        st.subheader(f"{idx.getIdx()}타이틀 얻기")
+        st.subheader(f"{idx.getSubIdx()}타이틀 얻기")
         with st.echo():
             import matplotlib.pyplot as plt
             import numpy as np
@@ -2990,13 +2929,12 @@ Graph Title
 Graph Title'''
         st.code(code, language="python")
 
-        idx.nextSection()
-        st.header(f"{idx.getSectionIdx()}Text 삽입")
+        st.header(f"{idx.getHeadIdx()}Text 삽입")
         st.write("matplotlib.pyplot 모듈의 **text()** 함수는 그래프의 적절한 위치에 텍스트를 삽입하도록 합니다.")
         st.write("**text()** 함수를 사용해서 그래프 영역에 텍스트를 삽입하고, 다양하게 꾸미는 방법에 대해 소개합니다.")
         st.write("이 페이지에서 사용하는 히스토그램 예제는 :blue[Histogram] 페이지를 참고하세요.")
 
-        st.subheader(f"{idx.getIdx()}기본 사용")
+        st.subheader(f"{idx.getSubIdx()}기본 사용")
         with st.echo():
             import matplotlib.pyplot as plt
             import numpy as np
@@ -3018,7 +2956,7 @@ Graph Title'''
         plt.close()
         st.divider()
 
-        st.subheader(f"{idx.getIdx()}텍스트 스타일 설정하기")
+        st.subheader(f"{idx.getSubIdx()}텍스트 스타일 설정하기")
         with st.echo():
             import matplotlib.pyplot as plt
             import numpy as np
@@ -3058,7 +2996,7 @@ Graph Title'''
         plt.close()
         st.divider()
 
-        st.subheader(f"{idx.getIdx()}텍스트 회전하기")
+        st.subheader(f"{idx.getSubIdx()}텍스트 회전하기")
         with st.echo():
             plt.hist(a, bins=100, density=True, alpha=0.7, histtype='step')
             plt.text(-3.0, 0.15, 'np.random.randn()', fontdict=font1, rotation=85)
@@ -3071,13 +3009,12 @@ Graph Title'''
         st.pyplot(plt)
         plt.close()
     
-    elif path == ("Matplotlib 기초", "그래프", "label, legend, 축 범위"):
-        idx.nextSection()
-        st.header(f"{idx.getSectionIdx()}축 레이블(Label) 설정하기")
+    elif path == ("Matplotlib 기초", "그래프"):
+        st.header(f"{idx.getHeadIdx()}축 레이블(Label) 설정하기")
         st.write("**matplotlib.pyplot** 모듈의 **xlabel(), ylabel()** 함수를 사용하면 그래프의 x, y 축에 대한 레이블을 표시할 수 있습니다.")
         st.write("xlabel(), ylabel() 함수를 사용해서 그래프의 축에 레이블을 표시하는 방법에 대해 소개합니다.")
 
-        st.subheader(f"{idx.getIdx()}기본 사용")
+        st.subheader(f"{idx.getSubIdx()}기본 사용")
         with st.echo():
             import matplotlib.pyplot as plt
 
@@ -3090,7 +3027,7 @@ Graph Title'''
         plt.close()
         st.divider()
 
-        st.subheader(f"{idx.getIdx()}여백 지정하기")
+        st.subheader(f"{idx.getSubIdx()}여백 지정하기")
         with st.echo():
             import matplotlib.pyplot as plt
 
@@ -3104,7 +3041,7 @@ Graph Title'''
         plt.close()
         st.divider()
 
-        st.subheader(f"{idx.getIdx()}폰트 설정하기")
+        st.subheader(f"{idx.getSubIdx()}폰트 설정하기")
         with st.echo():
             import matplotlib.pyplot as plt
 
@@ -3138,7 +3075,7 @@ Graph Title'''
         plt.close()
         st.divider()
 
-        st.subheader(f"{idx.getIdx()}위치 저장하기")
+        st.subheader(f"{idx.getSubIdx()}위치 저장하기")
         with st.echo():
             import matplotlib.pyplot as plt
 
@@ -3165,7 +3102,7 @@ Graph Title'''
         plt.close()
         st.divider()
         
-        st.subheader(f"{idx.getIdx()}X, Y 축 Tick 설정(rotation)")
+        st.subheader(f"{idx.getSubIdx()}X, Y 축 Tick 설정(rotation)")
         st.write("Tick은 X, Y축에 위치한 눈금을 말합니다.")
         with st.echo():
             import matplotlib.pyplot as plt
@@ -3190,13 +3127,12 @@ Graph Title'''
         st.pyplot(plt)
         plt.close()
 
-        idx.nextSection()
-        st.header(f"{idx.getSectionIdx()}범례(Legend) 설정")
+        st.header(f"{idx.getHeadIdx()}범례(Legend) 설정")
         st.write("**범례 (Legend)** 는 그래프에 데이터의 종류를 표시하기 위한 텍스트입니다.")
         st.write("**matplotlib.pyplot** 모듈의 **legend()** 함수를 사용해서 그래프에 범례를 표시할 수 있습니다.")
         st.write("그래프에 다양한 방식으로 범례를 표시하는 방법에 대해 소개합니다.")
 
-        st.subheader(f"{idx.getIdx()}기본 사용")
+        st.subheader(f"{idx.getSubIdx()}기본 사용")
         with st.echo():
             import matplotlib.pyplot as plt
 
@@ -3212,7 +3148,7 @@ Graph Title'''
         plt.close()
         st.divider()
 
-        st.subheader(f"{idx.getIdx()}위치 지정하기")
+        st.subheader(f"{idx.getSubIdx()}위치 지정하기")
         with st.echo():
             import matplotlib.pyplot as plt
 
@@ -3248,7 +3184,7 @@ Graph Title'''
         plt.close()
         st.divider()
 
-        st.subheader(f"{idx.getIdx()}열 개수 지정하기")
+        st.subheader(f"{idx.getSubIdx()}열 개수 지정하기")
         with st.echo():
             import matplotlib.pyplot as plt
 
@@ -3266,7 +3202,7 @@ Graph Title'''
         plt.close()
         st.divider()
 
-        st.subheader(f"{idx.getIdx()}폰트 크기 지정하기")
+        st.subheader(f"{idx.getSubIdx()}폰트 크기 지정하기")
         with st.echo():
             import matplotlib.pyplot as plt
 
@@ -3284,7 +3220,7 @@ Graph Title'''
         plt.close()
         st.divider()
 
-        st.subheader(f"{idx.getIdx()}범례 테두리 꾸미기")
+        st.subheader(f"{idx.getSubIdx()}범례 테두리 꾸미기")
         with st.echo():
             import matplotlib.pyplot as plt
 
@@ -3303,15 +3239,14 @@ Graph Title'''
         plt.close()
         st.write("이 외에도 legend() 함수에는 **facecolor, edgecolor, borderpad, labelspacing** 과 같은 다양한 파라미터가 있습니다.")
 
-        idx.nextSection()
-        st.header(f"{idx.getSectionIdx()}축 범위 지정하기")
+        st.header(f"{idx.getHeadIdx()}축 범위 지정하기")
         st.write("**matplotlib.pyplot** 모듈의 **xlim(), ylim(), axis()** 함수를 사용하면 그래프의 X, Y축이 표시되는 범위를 지정할 수 있습니다.")
         st.write("◾ xlim() - X축이 표시되는 범위를 지정하거나 반환합니다.")
         st.write("◾ ylim() - Y축이 표시되는 범위를 지정하거나 반환합니다.")
         st.write("◾ axis() - X, Y축이 표시되는 범위를 지정하거나 반환합니다.")
         st.write("그래프의 축의 범위를 지정하고, 확인하는 방법에 대해 소개합니다.")
         
-        st.subheader(f"{idx.getIdx()}기본 사용 - xlim(), ylim()")
+        st.subheader(f"{idx.getSubIdx()}기본 사용 - xlim(), ylim()")
         with st.echo():
             import matplotlib.pyplot as plt
 
@@ -3329,7 +3264,7 @@ Graph Title'''
         plt.close()
         st.divider()
 
-        st.subheader(f"{idx.getIdx()}기본사용 - axis()")
+        st.subheader(f"{idx.getSubIdx()}기본사용 - axis()")
         with st.echo():
             import matplotlib.pyplot as plt
 
@@ -3346,7 +3281,7 @@ Graph Title'''
         plt.close()
         st.divider()
 
-        st.subheader(f"{idx.getIdx()}옵션 지정하기")
+        st.subheader(f"{idx.getSubIdx()}옵션 지정하기")
         with st.echo():
             import matplotlib.pyplot as plt
 
@@ -3364,7 +3299,7 @@ Graph Title'''
         plt.close()
         st.divider()
 
-        st.subheader(f"{idx.getIdx()}축 범위 얻기")
+        st.subheader(f"{idx.getSubIdx()}축 범위 얻기")
         with st.echo():
             import matplotlib.pyplot as plt
 
@@ -3388,13 +3323,12 @@ Graph Title'''
         st.code(code, language="python")
         st.write("위의 예제 그림에서 X축은 0.85에서 4.15, Y축은 1.6에서 10.4 범위로 표시되었음을 알 수 있습니다.  ")
     
-    elif path == ("Matplotlib 기초", "스타일 세부 설정", "선,마커,색상"):
-        idx.nextSection()
-        st.header(f"{idx.getSectionIdx()}선 종류 지정")
+    elif path == ("Matplotlib 기초", "스타일 세부 설정"):
+        st.header(f"{idx.getHeadIdx()}선 종류 지정")
         st.write("데이터를 표현하기 위해 그려지는 선의 종류를 지정하는 방법을 소개합니다.")
         st.write("선 종류를 나타내는 문자열 또는 튜플을 이용해서 다양한 선의 종류를 구현할 수 있습니다.")
 
-        st.subheader(f"{idx.getIdx()}기본 사용")
+        st.subheader(f"{idx.getSubIdx()}기본 사용")
         st.write("데이터를 표현하기 위해 그려지는 선의 종류를 지정하는 방법을 소개합니다.")
         st.write("선 종류를 나타내는 문자열 또는 튜플을 이용해서 다양한 선의 종류를 구현할 수 있습니다.")
         st.write("**< line의 종류 >**")
@@ -3419,7 +3353,7 @@ Graph Title'''
         plt.close()
         st.divider()
 
-        st.subheader(f"{idx.getIdx()}linestyle 지정하기")
+        st.subheader(f"{idx.getSubIdx()}linestyle 지정하기")
         with st.echo():
             import matplotlib.pyplot as plt
 
@@ -3439,7 +3373,7 @@ Graph Title'''
         plt.close()
         st.divider()
 
-        st.subheader(f"{idx.getIdx()}튜플 사용하기")
+        st.subheader(f"{idx.getSubIdx()}튜플 사용하기")
         with st.echo():
             import matplotlib.pyplot as plt
 
@@ -3459,7 +3393,7 @@ Graph Title'''
         plt.close()
         st.divider()
 
-        st.subheader(f"{idx.getIdx()}선 끝 모양 지정하기")
+        st.subheader(f"{idx.getSubIdx()}선 끝 모양 지정하기")
         with st.echo():
             import matplotlib.pyplot as plt
 
@@ -3485,11 +3419,10 @@ Graph Title'''
         st.pyplot(plt)
         plt.close()
 
-        idx.nextSection()
-        st.header(f"{idx.getSectionIdx()}마커 지정")
+        st.header(f"{idx.getHeadIdx()}마커 지정")
         st.write("특별한 설정이 없으면 그래프가 실선으로 그려지지만, 위의 그림과 같은 마커 형태의 그래프를 그릴 수 있습니다.")
         st.write("**plot()** 함수의 **포맷 문자열 (Format string)** 을 사용해서 그래프의 선과 마커를 지정하는 방법에 대해 알아봅니다.")
-        st.subheader(f"{idx.getIdx()}기본 사용")
+        st.subheader(f"{idx.getSubIdx()}기본 사용")
         st.write("**< marker의 종류 >**")
         st.write("◾ '.' point marker")
         st.write("◾ ',' pixel marker")
@@ -3526,7 +3459,7 @@ Graph Title'''
         plt.close()
         st.divider()
 
-        st.subheader(f"{idx.getIdx()}선/마커 동시에 나타내기")
+        st.subheader(f"{idx.getSubIdx()}선/마커 동시에 나타내기")
         with st.echo():
             import matplotlib.pyplot as plt
 
@@ -3541,7 +3474,7 @@ Graph Title'''
         plt.close()
         st.divider()
 
-        st.subheader(f"{idx.getIdx()}선/마커 표시 형식")
+        st.subheader(f"{idx.getSubIdx()}선/마커 표시 형식")
         st.write("선/마커 표시 형식에 대한 예시는 아래와 같습니다.")
         code = '''
 'b'     # blue markers with default shape
@@ -3553,7 +3486,7 @@ Graph Title'''
         st.code(code, language="python")
         st.divider()
 
-        st.subheader(f"{idx.getIdx()}marker 파라미터 사용하기")
+        st.subheader(f"{idx.getSubIdx()}marker 파라미터 사용하기")
         with st.echo():
             import matplotlib.pyplot as plt
 
@@ -3568,11 +3501,10 @@ Graph Title'''
         st.pyplot(plt)
         plt.close()
     
-        idx.nextSection()
-        st.header(f"{idx.getSectionIdx()}색상 지정")
+        st.header(f"{idx.getHeadIdx()}색상 지정")
         st.write("**matplotlib.pyplot** 모듈의 **plot()** 함수를 사용해서 그래프를 나타낼 때, 색상을 지정하는 다양한 방법에 대해 소개합니다.")
         
-        st.subheader(f"{idx.getIdx()}기본 색상")
+        st.subheader(f"{idx.getSubIdx()}기본 색상")
         st.write("**< color의 종류 >**")
         st.write("◾ 'b' blue")
         st.write("◾ 'g' green")
@@ -3607,7 +3539,7 @@ Graph Title'''
         plt.close()
         st.divider()
 
-        st.subheader(f"{idx.getIdx()}color 키워드 인자 사용하기")
+        st.subheader(f"{idx.getSubIdx()}color 키워드 인자 사용하기")
         with st.echo():
             import matplotlib.pyplot as plt
 
@@ -3624,7 +3556,7 @@ Graph Title'''
         plt.close()
         st.divider()
 
-        st.subheader(f"{idx.getIdx()}포맷 문자열 사용하기")
+        st.subheader(f"{idx.getSubIdx()}포맷 문자열 사용하기")
         with st.echo():
             import matplotlib.pyplot as plt
 
@@ -3640,7 +3572,7 @@ Graph Title'''
         plt.close()
         st.divider()
 
-        st.subheader(f"{idx.getIdx()}Hex code 사용하기")
+        st.subheader(f"{idx.getSubIdx()}Hex code 사용하기")
         with st.echo():
             import matplotlib.pyplot as plt
 
@@ -3658,7 +3590,7 @@ Graph Title'''
         plt.close()
         st.divider()
 
-        st.subheader(f"{idx.getIdx()}투명도 설정")
+        st.subheader(f"{idx.getSubIdx()}투명도 설정")
         with st.echo():
             import matplotlib.pyplot as plt
             import numpy as np
@@ -3683,12 +3615,11 @@ Graph Title'''
         st.pyplot(plt)
         plt.close()
 
-    elif path == ("Matplotlib 기초", "Grid, Annotate", "grid, annotate"):
-        idx.nextSection()
-        st.header(f"{idx.getSectionIdx()}그리드(Grid)")
+    elif path == ("Matplotlib 기초", "Grid, Annotate"):
+        st.header(f"{idx.getHeadIdx()}그리드(Grid)")
         st.write("데이터의 위치를 더 명확하게 나타내기 위해 그래프에 그리드 **(Grid, 격자)** 를 표시할 수 있습니다.")
         st.write("**matplotlib.pyplot** 모듈의 **grid()** 함수를 이용해서 그래프에 다양하게 그리드를 설정해 보겠습니다.")
-        st.subheader(f"{idx.getIdx()}기본 사용")
+        st.subheader(f"{idx.getSubIdx()}기본 사용")
         with st.echo():
             import matplotlib.pyplot as plt
             import numpy as np
@@ -3706,7 +3637,7 @@ Graph Title'''
         plt.close()
         st.divider()
 
-        st.subheader(f"{idx.getIdx()}축 지정하기")
+        st.subheader(f"{idx.getSubIdx()}축 지정하기")
         with st.echo():
             import matplotlib.pyplot as plt
             import numpy as np
@@ -3725,7 +3656,7 @@ Graph Title'''
         plt.close()
         st.divider()
 
-        st.subheader(f"{idx.getIdx()}스타일 설정하기")
+        st.subheader(f"{idx.getSubIdx()}스타일 설정하기")
         with st.echo():
             import matplotlib.pyplot as plt
             import numpy as np
@@ -3743,9 +3674,8 @@ Graph Title'''
         st.pyplot(plt)
         plt.close()
 
-        idx.nextSection()
-        st.header(f"{idx.getSectionIdx()}Annotate 설정")
-        st.subheader(f"{idx.getIdx()}기본 사용")
+        st.header(f"{idx.getHeadIdx()}Annotate 설정")
+        st.subheader(f"{idx.getSubIdx()}기본 사용")
         with st.echo():
             import matplotlib.pyplot as plt
             import numpy as np
@@ -3776,12 +3706,11 @@ Graph Title'''
         st.pyplot(plt)
         plt.close()
 
-    elif path == ("Matplotlib 기초", "Plot", "Scatter, line, area, box"):
-        idx.nextSection()
-        st.header(f"{idx.getSectionIdx()}Scatterplot")
+    elif path == ("Matplotlib 기초", "Plot"):
+        st.header(f"{idx.getHeadIdx()}Scatterplot")
         st.write("**산점도 (Scatter plot)** 는 두 변수의 상관 관계를 직교 좌표계의 평면에 점으로 표현하는 그래프입니다.")
         st.write("**matplotlib.pyplot** 모듈의 **scatter()** 함수를 이용하면 산점도를 그릴 수 있습니다.")
-        st.subheader(f"{idx.getIdx()}기본 사용")
+        st.subheader(f"{idx.getSubIdx()}기본 사용")
         with st.echo():
             import matplotlib.pyplot as plt
             import numpy as np
@@ -3800,7 +3729,7 @@ Graph Title'''
         plt.close()
         st.divider()
 
-        st.subheader(f"{idx.getIdx()}색상과 크기 지정하기")
+        st.subheader(f"{idx.getSubIdx()}색상과 크기 지정하기")
         with st.echo():
             import matplotlib.pyplot as plt
             import numpy as np
@@ -3840,7 +3769,7 @@ Graph Title'''
         plt.close()
         st.divider()
 
-        st.subheader(f"{idx.getIdx()}투명도와 컬러맵 설정하기")
+        st.subheader(f"{idx.getSubIdx()}투명도와 컬러맵 설정하기")
         with st.echo():
             import matplotlib.pyplot as plt
             import numpy as np
@@ -3861,9 +3790,8 @@ Graph Title'''
         st.pyplot(plt)
         plt.close()
 
-        idx.nextSection()
-        st.header(f"{idx.getSectionIdx()}Line Plot")
-        st.subheader(f"{idx.getIdx()}기본 lineplot 그리기")
+        st.header(f"{idx.getHeadIdx()}Line Plot")
+        st.subheader(f"{idx.getSubIdx()}기본 lineplot 그리기")
         with st.echo():
             import matplotlib.pyplot as plt
             import numpy as np
@@ -3884,7 +3812,7 @@ Graph Title'''
         plt.close()
         st.divider()
 
-        st.subheader(f"{idx.getIdx()}2개 이상의 그래프 그리기")
+        st.subheader(f"{idx.getSubIdx()}2개 이상의 그래프 그리기")
         st.write("◾ color : 컬러 옵션")
         st.write("◾ alpha : 투명도 옵션")
         with st.echo():
@@ -3910,7 +3838,7 @@ Graph Title'''
         plt.close()
         st.divider()
 
-        st.subheader(f"{idx.getIdx()}마커 스타일링")
+        st.subheader(f"{idx.getSubIdx()}마커 스타일링")
         st.write("◾ marker : 마커 옵션")
         with st.echo():
             import matplotlib.pyplot as plt
@@ -3935,7 +3863,7 @@ Graph Title'''
         plt.close()
         st.divider()
 
-        st.subheader(f"{idx.getIdx()}라인 스타일 변경")
+        st.subheader(f"{idx.getSubIdx()}라인 스타일 변경")
         st.write("◾ linestyle : 라인 스타일 변경 옵션")
         with st.echo():
             import matplotlib.pyplot as plt
@@ -3959,8 +3887,7 @@ Graph Title'''
         st.pyplot(plt)
         plt.close()
 
-        idx.nextSection()
-        st.header(f"{idx.getSectionIdx()}Areaplot(Filled Area)")
+        st.header(f"{idx.getHeadIdx()}Areaplot(Filled Area)")
         st.write("matplotlib에서 area plot을 그리고자 할 때는 **fill_between** 함수를 사용합니다.")
         code='''import matplotlib.pyplot as plt
 import numpy as np
@@ -3972,7 +3899,7 @@ y'''
         code='''array([9, 8, 9, 5, 7, 6, 8, 7, 6, 5, 6, 6, 9, 7, 7, 5, 7, 8, 5, 7])'''
         st.code(code, language="python")
 
-        st.subheader(f"{idx.getIdx()}기본 areaplot 그리기")
+        st.subheader(f"{idx.getSubIdx()}기본 areaplot 그리기")
         with st.echo():
             import matplotlib.pyplot as plt
             import numpy as np
@@ -3987,7 +3914,7 @@ y'''
         plt.close()
         st.divider()
 
-        st.subheader(f"{idx.getIdx()}경계선을 굵게 그리고 area는 옆게 그리는 효과 적용")
+        st.subheader(f"{idx.getSubIdx()}경계선을 굵게 그리고 area는 옆게 그리는 효과 적용")
         with st.echo():
             import matplotlib.pyplot as plt
 
@@ -3997,7 +3924,7 @@ y'''
         plt.close()
         st.divider()
 
-        st.subheader(f"{idx.getIdx()}여러 그래프를 겹쳐서 표현")
+        st.subheader(f"{idx.getSubIdx()}여러 그래프를 겹쳐서 표현")
         with st.echo():
             import matplotlib.pyplot as plt
             import numpy as np
@@ -4013,8 +3940,7 @@ y'''
         st.pyplot(plt)
         plt.close()
 
-        idx.nextSection()
-        st.header(f"{idx.getSectionIdx()}Box Plot")
+        st.header(f"{idx.getHeadIdx()}Box Plot")
         st.write("**박스 플롯 (Box plot)** 또는 **박스-위스커 플롯 (Box-Whisker plot)** 은 수치 데이터를 표현하는 하나의 방식입니다.")
         st.write("샘플 데이터를 생성합니다.")
         with st.echo():
@@ -4028,7 +3954,7 @@ y'''
             flier_low = np.random.rand(10) * -100
             data = np.concatenate((spread, center, flier_high, flier_low))
         
-        st.subheader(f"{idx.getIdx()}기본 박스플롯 생성")
+        st.subheader(f"{idx.getSubIdx()}기본 박스플롯 생성")
         with st.echo():
             import matplotlib.pyplot as plt
 
@@ -4039,7 +3965,7 @@ y'''
         plt.close()
         st.divider()
 
-        st.subheader(f"{idx.getIdx()}Box Plot 축 바꾸기")
+        st.subheader(f"{idx.getSubIdx()}Box Plot 축 바꾸기")
         st.write("ax.boxplot()의 vert 파라미터를 False로 지정하면 수평 방향의 박스 플롯이 나타납니다.")
         st.write("디폴트는 수직 방향의 박스 플롯입니다.")
         with st.echo():
@@ -4053,7 +3979,7 @@ y'''
         plt.close()
         st.divider()
 
-        st.subheader(f"{idx.getIdx()}Outlier 마커 심볼과 컬러 변경")
+        st.subheader(f"{idx.getSubIdx()}Outlier 마커 심볼과 컬러 변경")
         with st.echo():
             outlier_marker = dict(markerfacecolor='r', marker='D')
         with st.echo():
@@ -4066,13 +3992,12 @@ y'''
         st.pyplot(plt)
         plt.close()
 
-    elif path == ("Matplotlib 기초", "Matplotlib 그래프", "컬러맵 그리기"):
-        idx.nextSection()
-        st.header(f"{idx.getSectionIdx()}컬러맵 그리기")
+    elif path == ("Matplotlib 기초", "Matplotlib 그래프"):
+        st.header(f"{idx.getHeadIdx()}컬러맵 그리기")
         st.write("**matplotlib.pyplot** 모듈은 컬러맵을 간편하게 설정하기 위한 여러 함수를 제공합니다.")
         st.write("아래의 함수들을 사용해서 그래프의 컬러맵을 설정하는 방식에 대해 소개합니다.")
         st.write("**autumn(), bone(), cool(), copper(), flag(), gray(), hot(), hsv(), inferno(), jet(), magma(), nipy_spectral(), pink(), plasma(), prism(), spring(), summer(), viridis(), winter().**")
-        st.subheader(f"{idx.getIdx()}기본 사용")
+        st.subheader(f"{idx.getSubIdx()}기본 사용")
         with st.echo():
             import matplotlib.pyplot as plt
             import numpy as np
@@ -4110,7 +4035,7 @@ y'''
         plt.close()
         st.divider()
 
-        st.subheader(f"{idx.getIdx()}컬러바 나타내기")
+        st.subheader(f"{idx.getSubIdx()}컬러바 나타내기")
         with st.echo():
             import matplotlib.pyplot as plt
             import numpy as np
@@ -4149,7 +4074,7 @@ y'''
         plt.close()
         st.divider()
 
-        st.subheader(f"{idx.getIdx()}컬러맵 종류")
+        st.subheader(f"{idx.getSubIdx()}컬러맵 종류")
         with st.echo():
             import matplotlib.pyplot as plt
             from matplotlib import cm
@@ -4161,12 +4086,11 @@ y'''
         st.write("예를 들어, **winter** 와 **winter_r** 은 순서가 앞뒤로 뒤집어진 컬러맵입니다.")
 
         
-    elif path == ("Matplotlib 기초", "막대 그래프", "막대, 수평막대, histogram"):
-        idx.nextSection()
-        st.header(f"{idx.getSectionIdx()}막대 그래프 그리기")
+    elif path == ("Matplotlib 기초", "막대 그래프"):
+        st.header(f"{idx.getHeadIdx()}막대 그래프 그리기")
         st.write("**막대 그래프 (Bar graph, Bar chart)** 는 범주가 있는 데이터 값을 직사각형의 막대로 표현하는 그래프입니다.")
         st.write("Matplotlib에서는 **matplotlib.pyplot** 모듈의 **bar()** 함수를 이용해서 막대 그래프를 간단하게 표현할 수 있습니다.")
-        st.subheader(f"{idx.getIdx()}기본 사용")
+        st.subheader(f"{idx.getSubIdx()}기본 사용")
         with st.echo():
             import matplotlib.pyplot as plt
             import numpy as np
@@ -4188,7 +4112,7 @@ y'''
         plt.close()
         st.divider()
 
-        st.subheader(f"{idx.getIdx()}비교 그래프 그리기")
+        st.subheader(f"{idx.getSubIdx()}비교 그래프 그리기")
         with st.echo():
             import matplotlib.pyplot as plt
             import numpy as np
@@ -4221,7 +4145,7 @@ y'''
         plt.close()
         st.divider()
 
-        st.subheader(f"{idx.getIdx()}색상 지정하기")
+        st.subheader(f"{idx.getSubIdx()}색상 지정하기")
         with st.echo():
             import matplotlib.pyplot as plt
             import numpy as np
@@ -4260,7 +4184,7 @@ y'''
         plt.close()
         st.divider()
 
-        st.subheader(f"{idx.getIdx()}막대 폭 지정하기")
+        st.subheader(f"{idx.getSubIdx()}막대 폭 지정하기")
         with st.echo():
             import matplotlib.pyplot as plt
             import numpy as np
@@ -4283,7 +4207,7 @@ y'''
         plt.close()
         st.divider()
 
-        st.subheader(f"{idx.getIdx()}스타일 꾸미기")
+        st.subheader(f"{idx.getSubIdx()}스타일 꾸미기")
         with st.echo():
             import matplotlib.pyplot as plt
             import numpy as np
@@ -4303,11 +4227,10 @@ y'''
         st.pyplot(plt)
         plt.close()
 
-        idx.nextSection()
-        st.header(f"{idx.getSectionIdx()}수막대 그래프 그리기")
+        st.header(f"{idx.getHeadIdx()}수막대 그래프 그리기")
         st.write("**수평 막대 그래프 (Horizontal bar graph)** 는 범주가 있는 데이터 값을 수평 막대로 표현하는 그래프입니다.")
         st.write("**matplotlib.pyplot** 모듈의 **barh()** 함수를 사용해서 수평 막대 그래프를 그리는 방법을 소개합니다.")
-        st.subheader(f"{idx.getIdx()}기본 사용")
+        st.subheader(f"{idx.getSubIdx()}기본 사용")
         with st.echo():
             import matplotlib.pyplot as plt
             import numpy as np
@@ -4328,7 +4251,7 @@ y'''
         plt.close()
         st.divider()
 
-        st.subheader(f"{idx.getIdx()}비교 그래프 그리기")
+        st.subheader(f"{idx.getSubIdx()}비교 그래프 그리기")
         with st.echo():
             import matplotlib.pyplot as plt
             import numpy as np
@@ -4361,7 +4284,7 @@ y'''
         plt.close()
         st.divider()
 
-        st.subheader(f"{idx.getIdx()}막대 높이 지정하기")
+        st.subheader(f"{idx.getSubIdx()}막대 높이 지정하기")
         with st.echo():
             import matplotlib.pyplot as plt
             import numpy as np
@@ -4384,7 +4307,7 @@ y'''
         plt.close()
         st.divider()
 
-        st.subheader(f"{idx.getIdx()}Barplot(축 변환)")
+        st.subheader(f"{idx.getSubIdx()}Barplot(축 변환)")
         st.write("barch 함수에서는 **xticks로 설정**했던 부분을 **yticks로 변경**합니다.")
         with st.echo():
             import matplotlib.pyplot as plt
@@ -4402,11 +4325,10 @@ y'''
         plt.close()
     
 
-        idx.nextSection()
-        st.header(f"{idx.getSectionIdx()}Histogram")
+        st.header(f"{idx.getHeadIdx()}Histogram")
         st.write("**히스토그램 (Histogram)은 도수분포표를 그래프로 나타낸 것으로서, 가로축은 계급, 세로축은 도수 (횟수나 개수 등)** 를 나타냅니다.")
         st.write("이번에는 **matplotlib.pyplot** 모듈의 **hist()** 함수를 이용해서 다양한 히스토그램을 그려 보겠습니다.")
-        st.subheader(f"{idx.getIdx()}기본 사용")
+        st.subheader(f"{idx.getSubIdx()}기본 사용")
         with st.echo():
             import matplotlib.pyplot as plt
 
@@ -4422,7 +4344,7 @@ y'''
         plt.close()
         st.divider()
 
-        st.subheader(f"{idx.getIdx()}구간 개수 지정하기")
+        st.subheader(f"{idx.getSubIdx()}구간 개수 지정하기")
         st.write("**hist()** 함수의 **bins** 파라미터는 히스토그램의 가로축 구간의 개수를 지정합니다.")
         st.write("아래 그림과 같이 구간의 개수에 따라 히스토그램 분포의 형태가 달라질 수 있기 때문에 적절한 구간의 개수를 지정해야 합니다.")
         with st.echo():
@@ -4450,7 +4372,7 @@ y'''
         plt.close()
         st.divider()
 
-        st.subheader(f"{idx.getIdx()}누적 히스토그램 그리기")
+        st.subheader(f"{idx.getSubIdx()}누적 히스토그램 그리기")
         with st.echo():
             import matplotlib.pyplot as plt
 
@@ -4467,7 +4389,7 @@ y'''
         plt.close()
         st.divider()
 
-        st.subheader(f"{idx.getIdx()}히스토그램 종류 지정하기")
+        st.subheader(f"{idx.getSubIdx()}히스토그램 종류 지정하기")
         with st.echo():
             import matplotlib.pyplot as plt
 
@@ -4498,7 +4420,7 @@ y'''
         plt.clf()
         st.divider()
 
-        st.subheader(f"{idx.getIdx()}NumPy 난수의 분포 나타내기")
+        st.subheader(f"{idx.getSubIdx()}NumPy 난수의 분포 나타내기")
         with st.echo():
             import matplotlib.pyplot as plt
             import numpy as np
@@ -4520,20 +4442,20 @@ y'''
         st.pyplot(plt)
         plt.close()
 
-    elif path == ("Matplotlib 기초", "이외?", "piechart, 3d") :
-        idx.nextSection()
-        st.header(f"{idx.getSectionIdx()}Pie Chart")
+    elif path == ("Matplotlib 기초", "이외?") :
+        st.header(f"{idx.getHeadIdx()}Pie Chart")
         st.write("**파이 차트 (Pie chart, 원 그래프)** 는 범주별 구성 비율을 원형으로 표현한 그래프입니다.")
         st.write("위의 그림과 같이 **부채꼴의 중심각을 구성 비율에 비례** 하도록 표현합니다.")
         st.write("**matplotlib.pyplot** 모듈의 **pie()** 함수를 이용해서 파이 차트를 그리는 방법에 대해 소개합니다.")
-        st.subheader(f"{idx.getIdx()}pie chart 옵션")
+
+        st.subheader(f"{idx.getSubIdx()}pie chart 옵션")
         st.write("◾ explode : 파이에서 툭 튀어져 나온 비율")
         st.write("◾ autopct : 퍼센트 자동으로 표기")
         st.write("◾ shadow : 그림자 표시")
         st.write("◾ startangle : 파이를 그리기 시작할 각도")
         st.divider()
 
-        st.subheader(f"{idx.getIdx()}기본 사용")
+        st.subheader(f"{idx.getSubIdx()}기본 사용")
         with st.echo():
             import matplotlib.pyplot as plt
 
@@ -4548,7 +4470,7 @@ y'''
         plt.close()
         st.divider()
 
-        st.subheader(f"{idx.getIdx()}시작 각도와 방향 설정하기")
+        st.subheader(f"{idx.getSubIdx()}시작 각도와 방향 설정하기")
         with st.echo():
             import matplotlib.pyplot as plt
 
@@ -4564,7 +4486,7 @@ y'''
         plt.close()
         st.divider()
 
-        st.subheader(f"{idx.getIdx()}중심에서 벗어나는 정도 설정하기")
+        st.subheader(f"{idx.getSubIdx()}중심에서 벗어나는 정도 설정하기")
         with st.echo():
             import matplotlib.pyplot as plt
 
@@ -4580,7 +4502,7 @@ y'''
         plt.close()
         st.divider()
 
-        st.subheader(f"{idx.getIdx()}그림자 나타내기")
+        st.subheader(f"{idx.getSubIdx()}그림자 나타내기")
         with st.echo():
             import matplotlib.pyplot as plt
 
@@ -4595,7 +4517,7 @@ y'''
         plt.close()
         st.divider()
 
-        st.subheader(f"{idx.getIdx()}색상 지정하기")
+        st.subheader(f"{idx.getSubIdx()}색상 지정하기")
         with st.echo():
             import matplotlib.pyplot as plt
 
@@ -4612,7 +4534,7 @@ y'''
         plt.close()
         st.divider()
 
-        st.subheader(f"{idx.getIdx()}부채꼴 스타일 지정하기")
+        st.subheader(f"{idx.getSubIdx()}부채꼴 스타일 지정하기")
         with st.echo():
             import matplotlib.pyplot as plt
 
@@ -4629,13 +4551,12 @@ y'''
         plt.close()
         
         
-        idx.nextSection()
-        st.header(f"{idx.getSectionIdx()}3D 그래프")
+        st.header(f"{idx.getHeadIdx()}3D 그래프")
         st.write("3D로 그래프를 그리기 위해서는 mplot3d를 추가로 import 합니다")
         with st.echo():
             from mpl_toolkits import mplot3d
 
-        st.subheader(f"{idx.getIdx()}밑그림 그리기(캔버스)")
+        st.subheader(f"{idx.getSubIdx()}밑그림 그리기(캔버스)")
         with st.echo():
             import matplotlib.pyplot as plt
 
@@ -4645,7 +4566,7 @@ y'''
         plt.close()
         st.divider()
 
-        st.subheader(f"{idx.getIdx()}3D plot 그리기")
+        st.subheader(f"{idx.getSubIdx()}3D plot 그리기")
         with st.echo():
             import matplotlib.pyplot as plt
             import numpy as np
@@ -4684,11 +4605,112 @@ y'''
         st.pyplot(plt)
         plt.close()
 
+    elif path == ("실습예제", "예제1"):
+        st.header(f"{idx.getHeadIdx()}서울시 대기오염")
+        st.subheader("서울시 대기오염")
+        st.write("CSV 파일의 2022년 서울시 대기오염 측정정보를 사용하여 데이터 로드, 분석 및 시각화 결론도출까지 실습을 진행합니다.")
+
+        st.subheader(f"{idx.getSubIdx()}데이터 불러오기")
+        st.write('- 실습을 위해 **아래의 버튼**을 클릭하여 데이터를 다운로드 해주세요')
+        
+        with open('data/서울시대기오염측정정보/Measurement_summary.csv', "rb") as template_file:
+            template_byte = template_file.read()
+
+        st.download_button(label="download data",
+                            type="primary",
+                            data=template_byte,
+                           file_name = "AIR_HOUR_2022.csv"
+        )
+        with st.echo():
+            # 필요한 패키지 설치
+            import numpy as np
+            import pandas as pd
+            import seaborn as sns
+            import matplotlib.pyplot as plt
+
+            # 데이터 불러오기
+            df_summary = pd.read_csv('data/서울시대기오염측정정보/Measurement_summary.csv')
+            df_item = pd.read_csv('data/서울시대기오염측정정보/Measurement_item_info.csv')
+            df_station = pd.read_csv('data/서울시대기오염측정정보/Measurement_station_info.csv')
+
+            df_summary.head()
+            df_item.head()
+            df_station.head()
+        import pandas as pd
+        df_summary = pd.read_csv('data/서울시대기오염측정정보/Measurement_summary.csv')
+        df_item = pd.read_csv('data/서울시대기오염측정정보/Measurement_item_info.csv')
+        df_station = pd.read_csv('data/서울시대기오염측정정보/Measurement_station_info.csv')
+
+        st.write("Measurement_summary")
+        st.write(df_summary.head())
+        st.write("Measurement_item_info")
+        st.write(df_item.head())
+        st.write("Measurement_station_info")
+        st.write(df_station.head())
+        st.divider()
+
+        st.subheader(f"{idx.getSubIdx()}데이터 합치기")
+        st.write("Measurement data를 data와 time으로 나누고, 일 평균 값으로 합칩니다.")
+
+        with st.echo():
+            # 'Measurement date' 열을 사용하여 date_time 분리
+            date_time = df_summary['Measurement date'].str.split(" ", n=1, expand=True)
+            date_time.head()
+        date_time = df_summary['Measurement date'].str.split(" ", n=1, expand=True)
+        st.write(date_time.head())
+
+        with st.echo():
+            # date_time에서 날짜와 시간을 추출하여 새로운 열 추가
+            df_summary['date'] = date_time[0]
+            df_summary['time'] = date_time[1]
+            # 원래의 'Measurement date' 열 삭제
+            df_summary = df_summary.drop(['Measurement date'], axis=1)
+            df_summary.head()
+        # df_summary['date'] = date_time[0]
+        # df_summary['time'] = date_time[1]
+        # df_summary = df_summary.drop(['Measurement date'], axis=1)
+        # st.write(df_summary.head())
+
+
+        st.subheader(f"{idx.getSubIdx()}데이터 분석")
+        st.write("먼저 서울 전체에 대해서 분석해 보기 위해서 data로 groupby하고 분석합니다.")
+
+        with st.echo():
+            df_seoul = df_summary.groupby(['date'], as_index=False).agg({'SO2':'mean', 'NO2':'mean', 'O3':'mean', 'CO':'mean', 'PM10':'mean', 'PM2.5':'mean'})
+            df_seoul.head()
+        df_seoul = df_summary.groupby(['date'], as_index=False).agg({'SO2':'mean', 'NO2':'mean', 'O3':'mean', 'CO':'mean', 'PM10':'mean', 'PM2.5':'mean'})
+        st.write(df_seoul.head())
+
+        with st.echo():
+            df_seoul.plot(x='date')
+            plt.show()
+        st.pyplot(plt)
+        plt.close()
+
+        # st.subheader(f"{idx.getSubIdx()}Seaborn 히트맵 예제")
+        # with st.echo():
+        #     df_numeric = df_seoul.drop(columns=['date'])
+        #     # 상관 행렬 계산
+        #     corr = df_seoul.corr()
+        #     # Figure 및 Axes 객체 생성
+        #     fig, ax = plt.subplots(figsize=(11, 9))
+        #     # 색상 맵 생성
+        #     cmap = sns.diverging_palette(220, 10, as_cmap=True)
+        #     # 히트맵 생성
+        #     sns.heatmap(corr, cmap=cmap, vmax=1, center=0,
+        #                 square=True, linewidths=.5, cbar_kws={"shrink": .5})
+        #     plt.show()
+        # st.pyplot(plt)
+        # plt.close()
+
+
     else :
         st.error("Content Not Found !")
 
+    st.button("돌아가기", on_click=update_session_state, args=('go_back',))
+
 def main() :
-    page, topic, chapter, section = init_session_state()
+    page, topic, chapter = init_session_state()
     
     if page == 'page_topic':
         show_topic(topic)
