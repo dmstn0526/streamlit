@@ -4653,17 +4653,20 @@ date_time.head()'''
         date_time = df_summary['Measurement date'].str.split(" ", n=1, expand=True)
         st.write(date_time.head())
 
-        with st.echo():
-            # date_time에서 날짜와 시간을 추출하여 새로운 열 추가
-            df_summary['date'] = date_time[0]
-            df_summary['time'] = date_time[1]
-            # 원래의 'Measurement date' 열 삭제
-            df_summary = df_summary.drop(['Measurement date'], axis=1)
-            df_summary.head()
-        # df_summary['date'] = date_time[0]
-        # df_summary['time'] = date_time[1]
-        # df_summary = df_summary.drop(['Measurement date'], axis=1)
-        # st.write(df_summary.head())
+        code = '''
+# date_time에서 날짜와 시간을 추출하여 새로운 열 추가
+df_summary['date'] = date_time[0]
+df_summary['time'] = date_time[1]
+# 원래의 'Measurement date' 열 삭제
+df_summary = df_summary.drop(['Measurement date'], axis=1)
+df_summary.head()
+'''
+        st.code(code, language='python')
+        
+        df_summary['date'] = date_time[0]
+        df_summary['time'] = date_time[1]
+        df_summary = df_summary.drop(['Measurement date'], axis=1)
+        st.write(df_summary.head())
 
 
         st.subheader(f"{idx.getSubIdx()}데이터 분석")
