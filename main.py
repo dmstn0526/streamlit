@@ -4662,7 +4662,7 @@ df_summary = df_summary.drop(['Measurement date'], axis=1)
 df_summary.head()
 '''
         st.code(code, language='python')
-        
+
         df_summary['date'] = date_time[0]
         df_summary['time'] = date_time[1]
         df_summary = df_summary.drop(['Measurement date'], axis=1)
@@ -4683,7 +4683,15 @@ df_summary.head()
         st.pyplot(plt)
         plt.close()
 
-        # st.subheader(f"{idx.getSubIdx()}Seaborn 히트맵 예제")
+        code = '''
+corr = df_seoul.corr()
+f, ax = plt.subplots(figsize=(11, 9))
+cmap = sns.diverging_palette(220, 10, as_cmap=True)
+sns.heatmap(corr, cmap=cmap, vmax=1, center=0,
+            square=True, linewidths=.5, cbar_kws={"shrink": .5})
+plt.show() 
+'''
+        # 히트맵 예제 오류
         # with st.echo():
         #     df_numeric = df_seoul.drop(columns=['date'])
         #     # 상관 행렬 계산
