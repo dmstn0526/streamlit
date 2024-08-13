@@ -4714,7 +4714,6 @@ sns.heatmap(corr, cmap=cmap, vmax=1, center=0,
             square=True, linewidths=.5, cbar_kws={"shrink": .5})
 plt.show() 
 '''
-        # 히트맵 예제 오류
         with st.echo():
             df_numeric = df_seoul.drop(columns=['date'])
             # 상관 행렬 계산
