@@ -1,11 +1,26 @@
 import streamlit as st
 from streamlit_option_menu import option_menu
 import matplotlib.pyplot as plt
-import platform
-from matplotlib import font_manager, rc
-plt.rcParams['axes.unicode_minus'] = False
-if platform.system() == 'Linux':
-    rc('font', family='NanumGothic')
+# plt.rcParams['font.family'] ='Malgun Gothic'
+# plt.rcParams['axes.unicode_minus'] =False
+
+# 한글폰트 적용
+# 폰트 적용
+import os
+import matplotlib.font_manager as fm  # 폰트 관련 용도 as fm
+def unique(list):
+    x = np.array(list)
+    return np.unique(x)
+
+@st.cache_data
+def fontRegistered():
+    font_dirs = [os.getcwd() + '/customfont']
+    font_files = fm.findSystemFonts(fontpaths=font_dirs)
+
+    for font_file in font_files:
+        fm.fontManager.addfont(font_file)
+    fm._load_fontmanager(try_read_cache=False)
+
 import numpy as np
 import seaborn as sns
 
@@ -4610,7 +4625,6 @@ y'''
 
     elif path == ("실습예제", "예제1"):
         st.header(f"{idx.getHeadIdx()}서울시 종로구 대기오염")
-        st.subheader("서울시 종로구 대기오염")
         st.write("CSV 파일의 2022년 서울시 종로구 대기오염 측정정보를 사용하여 데이터 로드, 분석 및 시각화 결론도출까지 실습을 진행합니다.")
 
         st.subheader(f"{idx.getSubIdx()}데이터 불러오기")
@@ -4806,6 +4820,11 @@ df_seoul.head()
     st.button("돌아가기", on_click=update_session_state, args=('go_back',))
 
 def main() :
+    fontRegistered()
+    fontNames = [f.name for f in fm.fontManager.ttflist]
+    fontname = st.selectbox("폰트 선택", unique(fontNames))
+
+    plt.rc('font', family=fontname)
     page, topic, chapter = init_session_state()
     
     if page == 'page_topic':
