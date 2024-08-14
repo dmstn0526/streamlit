@@ -3289,7 +3289,7 @@ Graph Title'''
             plt.plot([1, 2, 3], [3, 6, 9])
             plt.plot([1, 2, 3], [2, 4, 9])
             # 타이틀 & font 설정
-            plt.title("이것은 타이틀 입니다")
+            plt.title("이것은 타이틀 입니다", fontproperties=prop)
 
             plt.show()
         st.pyplot(plt)
@@ -3310,8 +3310,8 @@ Graph Title'''
             plt.title('X, Y 틱을 조정합니다', fontsize=10, fontproperties=prop)
 
             # X축 & Y축 Label 설정
-            plt.xlabel('X축', fontsize=10)
-            plt.ylabel('Y축', fontsize=10)
+            plt.xlabel('X축', fontsize=10, fontproperties=prop)
+            plt.ylabel('Y축', fontsize=10, fontproperties=prop)
 
             # X tick, Y tick 설정
             plt.xticks(rotation=90)
@@ -3721,8 +3721,8 @@ Graph Title'''
             plt.title('색상 설정 예제', fontsize=10, fontproperties=prop)
 
             # X축 & Y축 Label 설정
-            plt.xlabel('X축', fontsize=10)
-            plt.ylabel('Y축', fontsize=10)
+            plt.xlabel('X축', fontsize=10, fontproperties=prop)
+            plt.ylabel('Y축', fontsize=10, fontproperties=prop)
 
             # X tick, Y tick 설정
             plt.xticks(rotation=90)
@@ -3798,8 +3798,8 @@ Graph Title'''
             plt.title('투명도 (alpha) 설정 예제', fontsize=10, fontproperties=prop)
 
             # X축 & Y축 Label 설정
-            plt.xlabel('X축', fontsize=10)
-            plt.ylabel('Y축', fontsize=10)
+            plt.xlabel('X축', fontsize=10, fontproperties=prop)
+            plt.ylabel('Y축', fontsize=10, fontproperties=prop)
 
             # X tick, Y tick 설정
             plt.xticks(rotation=90)
@@ -4801,7 +4801,6 @@ y'''
 
     elif path == ("실습 프로젝트", "대기오염 데이터 분석"):
         st.header(f"{idx.getHeadIdx()}서울시 종로구 대기오염")
-        st.subheader("서울시 종로구 대기오염")
         st.write("CSV 파일의 2022년 서울시 종로구 대기오염 측정정보를 사용하여 데이터 로드, 분석 및 시각화 결론도출까지 실습을 진행합니다.")
 
         st.subheader(f"{idx.getSubIdx()}데이터 불러오기")
