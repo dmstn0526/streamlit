@@ -35,7 +35,7 @@ def load_contents() :
         "파이썬 기초": ["자료형", "제어문", "고급"],
         "Pandas 기초": ["DataFrame", "Excel/CSV", "Data 전처리", "Data 연결과 병합", "Static"],
         "Matplotlib 기초":["Matplotlib 기본", "그래프 그리기", "그래프에 text", "그래프 세부 속성", "스타일 세부 설정", 
-                         "Grid, Annotate", "Plot", "막대 그래프", "Pie chart, 3D plot"],
+                         "Grid, Annotate", "다양한 Plot", "막대 그래프", "Pie chart, 3D plot"],
         "실습 프로젝트":["대기오염 데이터 분석", "지역별 음식점 소비 트렌드 분석", "날씨별 공공자전거 수요 분석"],
     }
     topics = list(contents.keys())
@@ -2790,7 +2790,7 @@ start는 시작 인덱스, end는 끝 인덱스, step은 슬라이싱 간격을 
         plt.close()
         st.write("plot() 함수는 리스트의 값들이 y 값들이라고 가정하고, x 값 [0, 1, 2, 3]을 자동으로 만들어냅니다.")
         st.write("matplotlib.pyplot 모듈의 show() 함수는 그래프를 화면에 나타나도록 합니다.")
-        st.divider()
+
         with st.echo():
             import matplotlib.pyplot as plt
 
@@ -2889,7 +2889,7 @@ start는 시작 인덱스, end는 끝 인덱스, step은 슬라이싱 간격을 
         st.divider()
 
         st.subheader(f"{idx.getSubIdx()}다중 그래프(Multiple graphs)")
-        st.write("1개의 canvas 안에 다중 그래프 그리기")
+        st.write("1. 1개의 canvas 안에 다중 그래프 그리기")
         with st.echo():
             import matplotlib.pyplot as plt
             import numpy as np
@@ -2904,10 +2904,9 @@ start는 시작 인덱스, end는 끝 인덱스, step은 슬라이싱 간격을 
             plt.show()
         st.pyplot(plt)
         plt.close()
-        st.divider()
 
-        st.write("2개의 figure로 나누어서 다중 그래프 그리기")
-        st.write("◾ figure()는 새로운 그래프 canvas를 생성합니다.")
+        st.write("2. 2개의 figure로 나누어서 다중 그래프 그리기")
+        st.write("figure()는 새로운 그래프 canvas를 생성합니다.")
         with st.echo():
             import matplotlib.pyplot as plt
             import numpy as np
@@ -2923,10 +2922,11 @@ start는 시작 인덱스, end는 끝 인덱스, step은 슬라이싱 간격을 
             plt.show()
         st.pyplot(plt)
         plt.close()
+        st.divider()
 
         st.header(f"{idx.getHeadIdx()}여러개의 Plot")
         st.subheader(f"{idx.getSubIdx()}여러개의 Plot을 그리는 방법(Subplot)")
-        st.write("subplot(row, column, index)")
+        st.write("subplot(row, column, index)를 사용하여 subplot을 그릴 수 있습니다.")
         with st.echo():
             import matplotlib.pyplot as plt
             import numpy as np
@@ -3122,6 +3122,7 @@ Graph Title
 (1.0, 1.0)
 Graph Title'''
         st.code(code, language="python")
+        st.divider()
 
         st.header(f"{idx.getHeadIdx()}Text 삽입")
         st.write("matplotlib.pyplot 모듈의 **text()** 함수는 그래프의 적절한 위치에 텍스트를 삽입하도록 합니다.")
@@ -3269,6 +3270,38 @@ Graph Title'''
         plt.close()
         st.divider()
 
+        st.subheader(f"{idx.getSubIdx()}한글 폰트 깨짐 해결하기")
+        st.write("matplotlib에서는 한글 폰트를 지원하지 않기 때문에, 그래프에 한글을 작성하게 되면 한글이 깨지는 문제가 발생합니다.")
+        st.write("이를 해결하기 위해서는 한글 폰트를 설정해줘야 합니다.")
+        st.write("1️⃣ **첫 번째 방법**")
+        st.write("지원하는 폰트를 찾아 설정해주기")
+        st.write("이 중에서 matplotlib에서 지원하는 폰트를 찾아 설정해주면 됩니다.")
+        st.write("윈도우에서는 'malgun.ttf' 혹은 'NanumBarunGothic.ttf' 등을 사용할 수 있다. 맥에서는 'AppleGothic.ttf' 등을 사용할 수 있다.")
+        code = '''
+import matplotlib.pyplot as plt
+plt.rcParams['font.family'] ='Malgun Gothic'
+plt.rcParams['axes.unicode_minus'] =False'''
+        st.code(code, language='python')
+        st.write("2️⃣ **두 번째 방법**")
+        st.write("사용중인 os에서 한글 폰트 찾아 설정해주기")
+        st.write("보통 첫번째 방법으로 하면 대부분 작동하는데, 새로 다운받거나 지원하지 않는 다른 폰트를 사용하고 싶다면 경로를 따로 지정해줘야 합니다.")
+        st.write('윈도우에서는 "C:\Windows\Fonts" 폴더에, 맥에서는 "/Library/Fonts" 폴더에 폰트 파일이 저장되어 있다.')
+        st.write("다음 코드는 윈도우 기준 입니다.")
+        code = '''
+import matplotlib.pyplot as plt
+import matplotlib.font_manager as fm
+
+# 나눔글꼴 경로 설정
+font_path = 'C:/Windows/Fonts/NanumGothic.ttf'
+
+# 폰트 이름 가져오기
+font_name = fm.FontProperties(fname=font_path).get_name()
+
+# 폰트 설정
+plt.rc('font', family=font_name)'''
+        st.code(code, language='python')
+        st.divider()
+
         st.subheader(f"{idx.getSubIdx()}위치 저장하기")
         with st.echo():
             import matplotlib.pyplot as plt
@@ -3320,6 +3353,7 @@ Graph Title'''
             plt.show()
         st.pyplot(plt)
         plt.close()
+        st.divider()
 
         st.header(f"{idx.getHeadIdx()}범례(Legend) 설정")
         st.write("**범례 (Legend)** 는 그래프에 데이터의 종류를 표시하기 위한 텍스트입니다.")
@@ -3361,8 +3395,7 @@ Graph Title'''
             st.write("**loc** 파라미터에 여러 숫자 쌍을 입력하면서 범례의 위치를 확인해보세요.")
         st.pyplot(plt)
         plt.close()
-        st.divider()
-        
+
         with st.echo():
             import matplotlib.pyplot as plt
 
@@ -3432,6 +3465,7 @@ Graph Title'''
         st.pyplot(plt)
         plt.close()
         st.write("이 외에도 legend() 함수에는 **facecolor, edgecolor, borderpad, labelspacing** 과 같은 다양한 파라미터가 있습니다.")
+        st.divider()
 
         st.header(f"{idx.getHeadIdx()}축 범위 지정하기")
         st.write("**matplotlib.pyplot** 모듈의 **xlim(), ylim(), axis()** 함수를 사용하면 그래프의 X, Y축이 표시되는 범위를 지정할 수 있습니다.")
@@ -3694,6 +3728,7 @@ Graph Title'''
         st.write("예제에서 다섯가지 마커를 지정했습니다.")
         st.pyplot(plt)
         plt.close()
+        st.divider()
     
         st.header(f"{idx.getHeadIdx()}색상 지정")
         st.write("**matplotlib.pyplot** 모듈의 **plot()** 함수를 사용해서 그래프를 나타낼 때, 색상을 지정하는 다양한 방법에 대해 소개합니다.")
@@ -3867,9 +3902,19 @@ Graph Title'''
         st.write("또한 **which** 파라미터를 ‘major’, ‘minor’, ‘both’ 등으로 사용하면 주눈금, 보조눈금에 각각 그리드를 표시할 수 있습니다.")
         st.pyplot(plt)
         plt.close()
+        st.divider()
 
         st.header(f"{idx.getHeadIdx()}Annotate 설정")
+        st.write("annotate 함수는 그래프에 주석을 추가할 때 사용되며, 특히 데이터의 포인트나 위치에 텍스트나 화살표를 함께 표시할 수 있게 해줍니다.")
+        st.write("이 함수를 사용하여 그래프에서 중요한 정보를 강조하거나 설명하는 데 활용할 수 있습니다.")
         st.subheader(f"{idx.getSubIdx()}기본 사용")
+        code  = '''plt.annotate(s, xy, xytext, arrowprops, **kwargs)'''
+        st.code(code, language='python')
+        st.write("'s' 는 주석으로 표시할 텍스트 내용입니다. string으로 값을 넣어야 합니다.")
+        st.write("'xy' 는 주석을 추가할 데이터 포인트의 위치 입니다. 튜플 형태의 (x,y)좌표 입니다.")
+        st.write("'arrowprops' 는 화살표 스타일과 속성을 설정은 인자로 사전(dictionary) 타입의 값이 들어갑니다.")
+        st.caption("화살표를 사용하지 않으려면 arrowprops=None으로 설정합니다.")
+        st.write("'**kwargs' 는 추가적인 매개변수로, 텍스트 스타일이나 기타 속성을 지정할 수 있습니다.")
         with st.echo():
             import matplotlib.pyplot as plt
             import numpy as np
@@ -3900,7 +3945,7 @@ Graph Title'''
         st.pyplot(plt)
         plt.close()
 
-    elif path == ("Matplotlib 기초", "Plot"):
+    elif path == ("Matplotlib 기초", "다양한 Plot"):
         st.header(f"{idx.getHeadIdx()}Scatterplot")
         st.write("**산점도 (Scatter plot)** 는 두 변수의 상관 관계를 직교 좌표계의 평면에 점으로 표현하는 그래프입니다.")
         st.write("**matplotlib.pyplot** 모듈의 **scatter()** 함수를 이용하면 산점도를 그릴 수 있습니다.")
@@ -3945,7 +3990,6 @@ Graph Title'''
         st.write("마커에 임의의 크기와 색상을 지정했습니다.")
         st.pyplot(plt)
         plt.close()
-        st.divider()
 
         st.write("plot() 함수의 markersize 지정과 scatter() 함수의 s (size) 지정에 대해서는 아래의 예제를 참고하세요.")
         with st.echo():
@@ -3983,103 +4027,7 @@ Graph Title'''
         st.write("**cmap** 파라미터에 컬러맵에 해당하는 문자열을 지정할 수 있습니다.")
         st.pyplot(plt)
         plt.close()
-
-        st.header(f"{idx.getHeadIdx()}Line Plot")
-        st.subheader(f"{idx.getSubIdx()}기본 lineplot 그리기")
-        with st.echo():
-            import matplotlib.pyplot as plt
-            import numpy as np
-            
-            x = np.arange(0, 10, 0.1)
-            y = 1 + np.sin(x)
-
-            plt.plot(x, y)
-
-            plt.xlabel('x value', fontsize=15)
-            plt.ylabel('y value', fontsize=15)
-            plt.title('sin graph', fontsize=18)
-
-            plt.grid()
-
-            plt.show()
-        st.pyplot(plt)
-        plt.close()
         st.divider()
-
-        st.subheader(f"{idx.getSubIdx()}2개 이상의 그래프 그리기")
-        st.write("◾ color : 컬러 옵션")
-        st.write("◾ alpha : 투명도 옵션")
-        with st.echo():
-            import matplotlib.pyplot as plt
-            import numpy as np
-
-            x = np.arange(0, 10, 0.1)
-            y_1 = 1 + np.sin(x)
-            y_2 = 1 + np.cos(x)
-
-            plt.plot(x, y_1, label='1+sin', color='blue', alpha=0.3)
-            plt.plot(x, y_2, label='1+cos', color='red', alpha=0.7)
-
-            plt.xlabel('x value', fontsize=15)
-            plt.ylabel('y value', fontsize=15)
-            plt.title('sin and cos graph', fontsize=18)
-
-            plt.grid()
-            plt.legend()
-
-            plt.show()
-        st.pyplot(plt)
-        plt.close()
-        st.divider()
-
-        st.subheader(f"{idx.getSubIdx()}마커 스타일링")
-        st.write("◾ marker : 마커 옵션")
-        with st.echo():
-            import matplotlib.pyplot as plt
-            import numpy as np
-
-            x = np.arange(0, 10, 0.1)
-            y_1 = 1 + np.sin(x)
-            y_2 = 1 + np.cos(x)
-
-            plt.plot(x, y_1, label='1+sin', color='blue', alpha=0.3, marker='o')
-            plt.plot(x, y_2, label='1+cos', color='red', alpha=0.7, marker='+')
-
-            plt.xlabel('x value', fontsize=15)
-            plt.ylabel('y value', fontsize=15)
-            plt.title('sin and cos graph', fontsize=18)
-
-            plt.grid()
-            plt.legend()
-
-            plt.show()
-        st.pyplot(plt)
-        plt.close()
-        st.divider()
-
-        st.subheader(f"{idx.getSubIdx()}라인 스타일 변경")
-        st.write("◾ linestyle : 라인 스타일 변경 옵션")
-        with st.echo():
-            import matplotlib.pyplot as plt
-            import numpy as np
-
-            x = np.arange(0, 10, 0.1)
-            y_1 = 1 + np.sin(x)
-            y_2 = 1 + np.cos(x)
-
-            plt.plot(x, y_1, label='1+sin', color='blue', linestyle=':')
-            plt.plot(x, y_2, label='1+cos', color='red', linestyle='-.')
-
-            plt.xlabel('x value', fontsize=15)
-            plt.ylabel('y value', fontsize=15)
-            plt.title('sin and cos graph', fontsize=18)
-
-            plt.grid()
-            plt.legend()
-
-            plt.show()
-        st.pyplot(plt)
-        plt.close()
 
         st.header(f"{idx.getHeadIdx()}Areaplot(Filled Area)")
         st.write("matplotlib에서 area plot을 그리고자 할 때는 **fill_between** 함수를 사용합니다.")
@@ -4301,7 +4249,7 @@ y'''
         st.write("NumPy의 **np.arange()** 함수는 주어진 범위와 간격에 따라 균일한 값을 갖는 어레이를 반환합니다.")
         st.write("**years** 는 X축에 표시될 연도이고, **values** 는 막대 그래프의 y 값 입니다.")
         st.write("먼저 **plt.bar()** 함수에 x 값 [0, 1, 2]와 y 값 [100, 400, 900]를 입력해주고,")
-        st.write("**xticks()**에 **x** 와 **years** 를 입력해주면, X축의 눈금 레이블에 ‘2018’, ‘2019’, ‘2020’이 순서대로 표시됩니다.")
+        st.write("**xticks()** 에 **x** 와 **years** 를 입력해주면, X축의 눈금 레이블에 ‘2018’, ‘2019’, ‘2020’이 순서대로 표시됩니다.")
         st.pyplot(plt)
         plt.close()
         st.divider()
@@ -4420,8 +4368,9 @@ y'''
         st.write("**tick_label** 을 리스트 또는 어레이 형태로 지정하면, 틱에 문자열을 순서대로 나타낼 수 있습니다.")
         st.pyplot(plt)
         plt.close()
+        st.divider()
 
-        st.header(f"{idx.getHeadIdx()}수막대 그래프 그리기")
+        st.header(f"{idx.getHeadIdx()}수평막대 그래프 그리기")
         st.write("**수평 막대 그래프 (Horizontal bar graph)** 는 범주가 있는 데이터 값을 수평 막대로 표현하는 그래프입니다.")
         st.write("**matplotlib.pyplot** 모듈의 **barh()** 함수를 사용해서 수평 막대 그래프를 그리는 방법을 소개합니다.")
         st.subheader(f"{idx.getSubIdx()}기본 사용")
@@ -4517,7 +4466,7 @@ y'''
             plt.show()
         st.pyplot(plt)
         plt.close()
-    
+        st.divider()
 
         st.header(f"{idx.getHeadIdx()}Histogram")
         st.write("**히스토그램 (Histogram)은 도수분포표를 그래프로 나타낸 것으로서, 가로축은 계급, 세로축은 도수 (횟수나 개수 등)** 를 나타냅니다.")
@@ -4743,7 +4692,7 @@ y'''
         st.write("wedgeprops 딕셔너리의 ‘width’, ‘edgecolor’, ‘linewidth’ 키를 이용해서 각각 부채꼴 영역의 너비 (반지름에 대한 비율), 테두리의 색상, 테두리 선의 너비를 설정했습니다.")
         st.pyplot(plt)
         plt.close()
-        
+        st.divider()
         
         st.header(f"{idx.getHeadIdx()}3D 그래프")
         st.write("3D로 그래프를 그리기 위해서는 mplot3d를 추가로 import 합니다")
@@ -4778,7 +4727,7 @@ y'''
         st.pyplot(plt)
         plt.close()
         st.divider()
-
+        st.subheader(f"{idx.getSubIdx()}3D plot에 마커 추가하기")
         with st.echo():
             import matplotlib.pyplot as plt
             import numpy as np
@@ -4883,7 +4832,7 @@ df_summary.head()
         df_summary['time'] = date_time[1]
         df_summary = df_summary.drop(['Measurement date'], axis=1)
         st.write(df_summary.head())
-
+        st.divider()
 
         st.subheader(f"{idx.getSubIdx()}데이터 분석")
         st.write("먼저 서울 전체에 대해서 분석해 보기 위해서 data로 groupby하고 분석합니다.")
@@ -4922,7 +4871,7 @@ plt.show()
         st.pyplot(plt)
         plt.close()
         st.divider()
-        st.write("**PM10 농도**")
+        st.write("1️⃣ **PM10 농도**")
         st.write("미세먼지(PM10) 기준으로 좋음, 보통, 나쁨, 매우나쁨으로 구분")
         st.write("대한민국의 미세먼지 환경기준(일평균)")
         st.write("◾ 좋음 0~30")
@@ -4936,6 +4885,7 @@ df_seoul.head()'''
         st.write(df_seoul.head())
         st.write("PM10 농도 값을 기준으로 각 행에 대해 클래스를 할당하고, 'PM10_class'라는 새로운 열에 이 값을 저장합니다.")
         st.write("PM10 농도가 특정 범위에 있는 경우에 따라 0,1,2,3 값을 가집니다.")
+        st.caption("0: 좋음, 1: 보통, 2: 나쁨, 3: 매우나쁨")
         code = '''
 for (idx, row) in df_seoul.iterrows():
     pm10 = row[5]
@@ -4972,7 +4922,9 @@ df_seoul.head()
         df_seoul['PM10_class'].value_counts().plot(kind="bar")
         st.pyplot(plt)
         plt.close()
-        st.write("**Examine Strongest Correlation**")
+        st.divider()
+
+        st.write("2️⃣ **Examine Strongest Correlation**")
         st.write("seaborn과 jointplot을 사용하여 두 변수 간의 관계를 시각화 하였습니다.")
         st.write("df_seoul 데이터프레임의 'CO'와 'NO2'라는 두 변수 간의 상관관계를 시각화 하였습니다.")
         with st.echo():
