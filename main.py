@@ -1,11 +1,14 @@
 import streamlit as st
 from streamlit_option_menu import option_menu
 import matplotlib.pyplot as plt
-plt.rc('font', family='NanumGothic')        # For Windows 
-
-print(plt.rcParams['font.family'])
 # 한글폰트 적용
 # 폰트 적용
+import os
+from matplotlib import font_manager as fm
+
+fpath = os.path.join(os.getcwd(), "customfont/NanumGothic-Bold.ttf")
+prop = fm.FontProperties(fname=fpath)
+
 import numpy as np
 import seaborn as sns
 
@@ -3098,7 +3101,7 @@ Graph Title'''
             plt.plot([1, 2, 3], [3, 6, 9])
             plt.plot([1, 2, 3], [2, 4, 9])
             # 타이틀 & font 설정
-            plt.title("이것은 타이틀 입니다")
+            plt.title("이것은 타이틀 입니다", fontproperties=prop)
 
             plt.show()
         st.pyplot(plt)
