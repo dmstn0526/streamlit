@@ -1,26 +1,11 @@
 import streamlit as st
 from streamlit_option_menu import option_menu
 import matplotlib.pyplot as plt
-# plt.rcParams['font.family'] ='Malgun Gothic'
-# plt.rcParams['axes.unicode_minus'] =False
+plt.rc('font', family='NanumGothic')        # For Windows 
 
+print(plt.rcParams['font.family'])
 # 한글폰트 적용
 # 폰트 적용
-import os
-import matplotlib.font_manager as fm  # 폰트 관련 용도 as fm
-def unique(list):
-    x = np.array(list)
-    return np.unique(x)
-
-@st.cache_data
-def fontRegistered():
-    font_dirs = [os.getcwd() + '/customfont']
-    font_files = fm.findSystemFonts(fontpaths=font_dirs)
-
-    for font_file in font_files:
-        fm.fontManager.addfont(font_file)
-    fm._load_fontmanager(try_read_cache=False)
-
 import numpy as np
 import seaborn as sns
 
@@ -4820,11 +4805,6 @@ df_seoul.head()
     st.button("돌아가기", on_click=update_session_state, args=('go_back',))
 
 def main() :
-    fontRegistered()
-    fontNames = [f.name for f in fm.fontManager.ttflist]
-    fontname = st.selectbox("폰트 선택", unique(fontNames))
-
-    plt.rc('font', family=fontname)
     page, topic, chapter = init_session_state()
     
     if page == 'page_topic':
