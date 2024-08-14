@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 import os
 from matplotlib import font_manager as fm
 
-fpath = os.path.join(os.getcwd(), "customfont/NanumGothic-Bold.ttf")
+fpath = os.path.join(os.getcwd(), "customfont/NanumGothic-Regular.ttf")
 prop = fm.FontProperties(fname=fpath)
 
 import numpy as np
