@@ -1,35 +1,31 @@
 import streamlit as st
 from streamlit_option_menu import option_menu
 import matplotlib.pyplot as plt
-# 한글폰트 적용
-# 폰트 적용
 import os
 from matplotlib import font_manager as fm
 
 fpath = os.path.join(os.getcwd(), "customfont/NanumGothic-Regular.ttf")
 prop = fm.FontProperties(fname=fpath)
-
 import numpy as np
-import seaborn as sns
+
 
 class IndexAllocator:
     def __init__(self):
         self.parentIdx = 0
         self.childIdx = 0
-        
+
+    #format : 1. / 2. / 3. ...
     def getHeadIdx(self) :
         #섹션 변경
         self.parentIdx += 1
         self.childIdx = 0
-        
-        #format : 1. / 2. / 3. ...
         return f"{self.parentIdx}. "
-    
+
+    #format : 1.1 / 1.2 ...
     def getSubIdx(self):
         self.childIdx += 1
-        
-        #format : 1.1 / 1.2 ...
         return f"{self.parentIdx}.{self.childIdx} "
+
 idx = IndexAllocator()
 
 @st.cache_data
@@ -38,8 +34,9 @@ def load_contents() :
     contents = {
         "파이썬 기초": ["자료형", "제어문", "고급"],
         "Pandas 기초": ["DataFrame", "Excel/CSV", "Data 전처리", "Data 연결과 병합", "Static"],
-        "Matplotlib 기초":["Matplotlib 기본", "그래프 그리기?", "그래프에 text", "그래프", "스타일 세부 설정", "Grid, Annotate", "Plot", "막대 그래프", "이외?"],
-        "실습예제" : ["예제1", "예제2", "예제3"],
+        "Matplotlib 기초":["Matplotlib 기본", "그래프 그리기", "그래프에 text", "그래프 세부 속성", "스타일 세부 설정", 
+                         "Grid, Annotate", "Plot", "막대 그래프", "Pie chart, 3D plot"],
+        "실습 프로젝트":["대기오염 데이터 분석", "지역별 음식점 소비 트렌드 분석", "날씨별 공공자전거 수요 분석"],
     }
     topics = list(contents.keys())
     return contents, topics
@@ -84,10 +81,11 @@ def show_topic(topic):
     st.title(topic)
     info_txt = {
             "파이썬 기초" : "파이썬 기초 문법을 제공합니다.",
-            "Pandas 기초" : "Pandas 기초 문법을 제공합니다.",
+            "Pandas 기초" : '''pandas는 데이터를 쉽게 다루고 분석할 수 있게 도와주는 라이브러리입니다. \n
+데이터를 표 형태로 나타낼 수 있으며, 효과적으로 저장하고 조작할 수 있고, 필터링하고 정렬하는 데 유용합니다''',
             "Matplotlib 기초" : '''matplotlib.pyplot 모듈은 명령어 스타일로 동작하는 함수의 모음입니다.\n
 matplotlib.pyplot 모듈의 각각의 함수를 사용해서 그래프 영역을 만들고, 몇 개의 선을 표현하고, 레이블로 꾸미는 등 간편하게 그래프를 만들고 변화를 줄 수 있습니다.''',
-            "실습예제" : "실습예제를 제공합니다.",
+            "실습 프로젝트" : "데이터 분석 및 시각화 실습 코드를 제공합니다.",
     }
     st.info(info_txt[topic])
     
@@ -137,7 +135,6 @@ def show_chapter(topic, chapter):
     ### Python 컨텐츠 작성
     if path == ("파이썬 기초", "자료형") :
         st.header(f"{idx.getHeadIdx()}숫자형")
-        st.subheader(f"{idx.getSubIdx()}숫자형이란")
         st.write("숫자형에는 정수형(Integer)과 실수형(Float)이 있습니다. 정수는 양의 정수와 음의 정수, 0이 될 수 있는 숫자입니다. 실수는 소수점이 포함된 숫자를 의미합니다.")
         st.code('''
                 #정수형(Integer)
@@ -248,7 +245,6 @@ def show_chapter(topic, chapter):
         st.divider()
         
         st.header(f"{idx.getHeadIdx()}문자열")
-        st.subheader(f"{idx.getSubIdx()}문자열이란")
         st.write('''문자열(string)이란 연속된 문자들의 나열을 말합니다. 큰따옴표("") 또는 작은따옴표('')로 묶어서 정의합니다.''')
         st.code('''
                 str1 = "Hello World !"
@@ -424,7 +420,6 @@ start는 시작 인덱스, end는 끝 인덱스, step은 슬라이싱 간격을 
         st.divider()
         
         st.header(f"{idx.getHeadIdx()}불")
-        st.subheader(f"{idx.getSubIdx()}불이란")
         st.write('''
                 불(bool)이란 참(True)과 거짓(False)을 나타내는 자료형입니다. 불 자료형은 다음 2가지 값만을 가질 수 있습니다.
 
@@ -467,7 +462,6 @@ start는 시작 인덱스, end는 끝 인덱스, step은 슬라이싱 간격을 
         st.divider()
         
         st.header(f"{idx.getHeadIdx()}리스트")
-        st.subheader(f"{idx.getSubIdx()}리스트란")
         st.write("리스트는 데이터들을 편리하게 관리하기 위해 묶어서 관리하는 자료형 중의 하나 입니다. 리스트 안에는 어떠한 자료형도 포함할 수 있습니다.")
         st.code('''
                 a = []  #값이 없는 리스트
@@ -711,7 +705,6 @@ start는 시작 인덱스, end는 끝 인덱스, step은 슬라이싱 간격을 
         st.divider()
         
         st.header(f"{idx.getHeadIdx()}튜플")
-        st.subheader(f"{idx.getSubIdx()}튜플이란")
         st.write('''
                 튜플(Tuple)은 몇 가지 점을 재외하곤 리스트와 거의 비슷하며 리스트와 다른 점은 다름과 같습니다.
                 
@@ -763,7 +756,6 @@ start는 시작 인덱스, end는 끝 인덱스, step은 슬라이싱 간격을 
         st.divider()
         
         st.header(f"{idx.getHeadIdx()}딕셔너리")
-        st.subheader(f"{idx.getSubIdx()}딕셔너리란")
         st.write('''
                 딕셔너리(dictionary)란 단어 그대로 '사전'이라는 뜻입니다. 딕셔너리의 기본 구조는 아래와 같이 Key와 Value를 한 쌍으로 가지며, 리스트나 튜플처럼 순차적으로 해당 요솟값을 구하지 않고 Key를 통해 Value를 얻는 특징을 가집니다.
         
@@ -867,7 +859,6 @@ start는 시작 인덱스, end는 끝 인덱스, step은 슬라이싱 간격을 
         st.divider()
         
         st.header(f"{idx.getHeadIdx()}집합")
-        st.subheader(f"{idx.getSubIdx()}집합이란")
         st.write("집합(set)은 집합에 관련된 것을 쉽게 처리하기 위해 만든 자료형입니다.")
         st.code('''
                 #set 키워드 사용해서 집합 만들기
@@ -1102,7 +1093,6 @@ start는 시작 인덱스, end는 끝 인덱스, step은 슬라이싱 간격을 
         st.divider()
         
         st.header(f"{idx.getHeadIdx()}while문")
-        st.subheader(f"{idx.getSubIdx()}while문이란")
         st.write("문장을 반복해서 수행해야 할 경우 while 문을 사용합니다. 그래서 while 문을 ‘반복문’이라고도 부릅니다.")
         st.divider()
 
@@ -1174,7 +1164,6 @@ start는 시작 인덱스, end는 끝 인덱스, step은 슬라이싱 간격을 
         st.divider()
         
         st.header(f"{idx.getHeadIdx()}for문")
-        st.subheader(f"{idx.getSubIdx()}for문이란")
         st.write('''
                  for문은 정해진 횟수나 범위 안에서 차례대로 대입하며 반복을 수행하는 반복문입니다. 아래와 같은 기본 구조를 가집니다.
                  
@@ -1242,7 +1231,6 @@ start는 시작 인덱스, end는 끝 인덱스, step은 슬라이싱 간격을 
     
     elif path == ("파이썬 기초", "고급") :
         st.header(f"{idx.getHeadIdx()}함수")
-        st.subheader(f"{idx.getSubIdx()}함수란")
         st.write("코드의 반복을 줄이거나 어떠한 용도를 위해 특정 코드들을 모아둔 것입니다. 한 번 작성해두면 해당 코드가 필요할 때 함수를 호출해서 쉽게 재사용 할 수 있고, 용도에 따라 분리가 가능해 가독성이 좋습니다.")
         st.divider()
 
@@ -1340,7 +1328,168 @@ start는 시작 인덱스, end는 끝 인덱스, step은 슬라이싱 간격을 
                 #출력 : 7
                 ''')
         st.write("add는 2개의 인수를 받아 서로 더한 값을 리턴하는 lambda 함수입니다. lambda로 만든 함수는 return 명령어가 없어도 표현식의 결과값을 리턴합니다.")
+        st.divider()
 
+        # st.header(f"{idx.getHeadIdx()}클래스")
+        # st.write('''
+        #          어떤 하나의 기능을 구현하는데 여러개의 함수가 필요할 때가 있습니다. 이때 데이터와 세부적인 기능을 수행하는 함수들을 묶어서 구현할 수 있는데 
+        #          이때 기본적으로 사용되는 것이 클래스입니다. 클래스는 상속 등의 다양한 기능을 통해 프로그램의 복잡도를 감소시켜주며 확장에 매우 유리하게 작용합니다.
+        #          ''')
+        # st.code('''
+        #         class 클래스_이름 : 
+        #                     def 함수_이름1(self) : 
+        #                         수행할 문장
+        #                         ...
+        #                     def 함수_이름2(self) : 
+        #                         수행할 문장
+        #                         ...
+        #         ''')
+        # st.divider()
+        # st.subheader(f"{idx.getSubIdx()}클래스와 객체")
+        # st.write('''
+        #         클래스와 객체는 '과자틀'과 '과자 틀로 찍어낸 과자'에 비유할 수 있습니다.
+        #         ''')
+        
+        # st.divider()
+
+        st.header(f"{idx.getHeadIdx()}모듈")
+        st.write('''
+                 모듈이란 함수나 변수 또는 클래스를 모아 놓은 파이썬 파일입니다. 모듈은 다른 파이썬 프로그램에서 불러와 사용할 수 있도록 만든 파이썬 파일이라고도 할 수 있습니다. 
+                 파이썬으로 프로그래밍을 할 때 매우 많은 모듈을 사용하며, 다른 사람들이 이미 만들어 놓은 모듈을 사용할 수도 있고 직접 만들어 사용할 수도 있습니다.''')
+        st.divider()
+
+        st.subheader(f"{idx.getSubIdx()}모듈 만들기")
+        st.write('''
+                아래와 같이 :blue-background[add]와 :blue-background[sub] 함수만 있는 파일 mod1.py를 만들고 :red-background[C:\\hfpy] 디렉터리에 저장합니다. 이 mod1.py 파일이 바로 모듈이 됩니다.
+                 ''')
+        st.code('''
+                # mod1.py
+                def add(a, b):
+                    return a + b
+
+                def sub(a, b): 
+                    return a-b
+                ''')
+        st.divider()
+
+        st.subheader(f"{idx.getSubIdx()}모듈 불러오기")
+        st.write('''
+                mod1.py를 저장한 :red-background[C:\\hfpy]에 새로운 py 파일을 생성해 봅시다. 이후 만들어둔 mod1.py 파일, 즉 모듈을 파이썬에서 불러와 사용하기 위해선 mod1.py를 저장한 :blue-background[import mod1]을 작성해 줍시다. 
+                (* import는 현재 디렉터리에 있는 파일이나 파이썬 라이브러리가 저장된 디렉터리에 있는 모듈만 불러올 수 있습니다.)
+                
+                         import 모듈_이름
+
+                import는 이미 만들어 놓은 파이썬 모듈을 사용할 수 있게 해 주는 명령어입니다. mod1.py 파일에 있는 add 함수를 사용하기 위해서는 mod1.add처럼 모듈 이름 뒤에 도트 연산자(.)를 붙이고 함수 이름을 쓰면 됩니다.
+                 ''')
+        st.code('''
+                import mod1
+                print(mod1.add(3, 4))
+                # 출력 : 7
+
+                print(mod1.sub(4, 2))
+                # 출력 : 2
+                ''')
+
+        st.write('''
+                여기에서 '모듈_이름'은 mod1.py에서 .py 확장자를 제거한 mod1만을 가리킵니다. 때로는 mod1.add, mod1.sub처럼 쓰지 않고 add, sub처럼 모듈 이름 없이 함수 이름만 쓰고 싶은 경우도 있을 것입니다.
+                이럴 때는 다음과 같이 사용할 수 있습니다.
+
+                        from 모듈_이름 import 모듈_함수
+                 
+                위와 같이 함수를 직접 import하면 모듈 이름을 붙이지 않고 바로 해당 모듈의 함수를 쓸 수 있습니다.
+                 ''')
+        st.code('''
+                #add 함수 하나만 사용
+                from mod1 import add
+                
+                print(add(3, 4))
+                # 출력 : 7
+                ''')
+        st.code('''
+                #2개 이상의 함수 불러오기
+                from mod1 import add, sub
+                
+                print(add(3, 4))
+                # 출력 : 7
+
+                print(sub(4, 2))
+                # 출력 : 2
+                ''')
+        st.write('''
+                모듈 내 모든 함수를 불러오고 싶을 때 :blue-background[*] 문자를 사용할 수 있습니다.
+                ''')
+        st.code('''
+                #모든 함수 불러오기
+                from mod1 import *
+                
+                print(add(3, 4))
+                # 출력 : 7
+
+                print(sub(4, 2))
+                # 출력 : 2
+                ''')
+        st.divider()
+        st.subheader(f"{idx.getSubIdx()}클래스나 변수 등을 포함한 모듈")
+        st.write('''
+                클래스나 변수 등을 포함할 수도 있습니다. 다음과 같은 mod2.py 파일을 작성해 봅시다.
+                 ''')
+        st.code('''
+                # mod2.py
+                PI = 3.141592
+
+                class Math: 
+                    def solv(self, r): 
+                        return PI * (r ** 2) 
+
+                def add(a, b): 
+                    return a+b 
+                ''')
+        st.write('''
+                mod2를 불러오기 위해 mod1.py를 저장한 디렉터리에 새로운 py파일을 작성해 봅시다.
+                 ''')
+        
+        st.code('''
+                import mod2
+                
+                print(mod2.PI)
+                # 출력 : 3.141592
+
+                a = mod2.Math()
+                print(a.solv(2))
+                # 출력 : 12.566368
+
+                print(mod2.add(mod2.PI, 4.4))
+                # 출력 : 7.541592
+                ''')
+        
+        st.divider()
+
+        st.header(f"{idx.getHeadIdx()}패키지")
+        st.write('''
+                패키지는 모듈의 집합을 뜻합니다. 모듈은 하나의 .py 파이썬 파일, 패키지는 여러개의 .py 파일을 모아놓은 폴더 개념으로 생각할 수 있습니다.
+                파이썬 패키지 중 예로는 넘파이 (NumPy)와 Pandas (판다스)가 있습니다.
+                ''')
+        st.divider()
+
+        st.subheader(f"{idx.getSubIdx()}pip를 이용하여 패키지 설치하기")
+        st.write('''
+                 일부 패키지는 파이썬을 설치할 때 함께 설치됩니다. 그러나 그 외에 추가로 패키지를 더 사용해야 할 때는 사용자가 수동으로 설치해야 합니다.
+                 파이썬은 간단한 명령어만으로 패키지를 쉽게 내려받아 설치할 수 있습니다.
+
+                        pip install 패키지이름
+                 
+                예를 들어 pandas 패키지를 설치하려면 :blue-background[pip install pandas] 명령을 통해 설치할 수 있습니다.
+                ''')
+        st.divider()
+        
+        st.subheader(f"{idx.getSubIdx()}pip를 이용하여 설치된 패키지 확인하기")
+        st.write('''
+                 :blue-background[pip list] 명령을 통해 설치된 패키지 목록을 볼 수 있습니다.
+
+                        pip list
+
+                ''')
+    
     ### Pandas 컨텐츠 작성
     elif path == ("Pandas 기초", "DataFrame") :
         st.header(f"{idx.getHeadIdx()}데이터프레임 생성") ## 소단원01
@@ -1583,17 +1732,17 @@ start는 시작 인덱스, end는 끝 인덱스, step은 슬라이싱 간격을 
         st.write('- indexing과 slicing을 할 수 있습니다.')
         st.write('- slicing은 [**시작(포함): 끝(포함)**] 규칙에 유의합니다. 둘 다 포함 합니다.')
 
-        st.write('**01-1. indexing 예시**')
+        st.write('**01. indexing 예시**')
         st.code('''df.loc[5, 'class']''')
         st.write(df.loc[5, 'class'])
         st.divider()
 
-        st.write('**01-2. fancy indexing 예시**')
+        st.write('**02. fancy indexing 예시**')
         st.code('''df.loc[2:5, ['age', 'fare', 'who']]''')
         st.write(df.loc[2:5, ['age', 'fare', 'who']])
         st.divider()
 
-        st.write('**01-3. slicing 예시**')
+        st.write('**03. slicing 예시**')
         st.code('''df.loc[2:5, 'class':'deck'].head()''')
         st.write(df.loc[2:5, 'class':'deck'].head())
 
@@ -1601,7 +1750,7 @@ start는 시작 인덱스, end는 끝 인덱스, step은 슬라이싱 간격을 
         st.write(df.loc[:6, 'class':'deck'])
         st.divider()
 
-        st.write('**01-4. loc - 조건 필터**')
+        st.write('**04. loc - 조건 필터**')
         st.write('boolean index을 만들어 조건에 맞는 데이터만 추출해 낼 수 있습니다.')
         st.code('''cond = (df['age'] >= 70)\ncond''')
         cond = (df['age'] >= 70)
@@ -1611,7 +1760,7 @@ start는 시작 인덱스, end는 끝 인덱스, step은 슬라이싱 간격을 
         st.write(df.loc[cond])
         st.divider()
 
-        st.write('**01-5. loc - 다중조건**')
+        st.write('**05. loc - 다중조건**')
         st.write('다중 조건은 먼저 condition(조건)을 정의하고 **&** 와 **|** 연산자로 **복합 조건을 생성**합니다.')
         st.code(
             '''# 조건1 정의\ncond1 = (df['fare'] > 30)\n# 조건2 정의\ncond2 = (df['who'] == 'woman')''')
@@ -1625,7 +1774,7 @@ start는 시작 인덱스, end는 끝 인덱스, step은 슬라이싱 간격을 
         st.write(df.loc[cond1 | cond2])
         st.divider()
 
-        st.write('**01-6. 조건 필터 후 데이터 대입**')
+        st.write('**06. 조건 필터 후 데이터 대입**')
         st.code('''cond = (df['age'] >= 70)\ncond''')
         cond = (df['age'] >= 70)
         st.write(cond)
@@ -1634,7 +1783,7 @@ start는 시작 인덱스, end는 끝 인덱스, step은 슬라이싱 간격을 
         st.write(df.loc[cond])
         st.divider()
 
-        st.write('**01-7. 나이 컬럼**만 가져옵니다.')
+        st.write('**07. 나이 컬럼**만 가져옵니다.')
         with st.echo():
             df.loc[cond, 'age']
         st.divider()
@@ -1653,22 +1802,22 @@ start는 시작 인덱스, end는 끝 인덱스, step은 슬라이싱 간격을 
         st.write(df.head())
         st.divider()
 
-        st.write('**02-1. indexing**')
+        st.write('**01. indexing**')
         st.code('''df.iloc[1, 3]''')
         st.write(df.iloc[1, 3])
         st.divider()
 
-        st.write('**02-2. Fancy Indexing**')
+        st.write('**02. Fancy Indexing**')
         st.code('''df.iloc[[0, 3, 4], [0, 1, 5, 6]]''')
         st.write(df.iloc[[0, 3, 4], [0, 1, 5, 6]])
         st.divider()
 
-        st.write('**02-3. Slicing**')
+        st.write('**03. Slicing**')
         st.code('''df.iloc[:3, :5]''')
         st.write(df.iloc[:3, :5])
         st.divider()
 
-        st.write('**02-4. isin**')
+        st.write('**04. isin**')
         st.write('특정 값의 포함 여부는 isin 함수를 통해 비교가 가능합니다. (파이썬의 in 키워드는 사용 불가 합니다.)')
         with st.echo():
             import pandas as pd
@@ -1690,7 +1839,7 @@ start는 시작 인덱스, end는 끝 인덱스, step은 슬라이싱 간격을 
             condition = sample['name'].isin(['kim', 'lee'])
         with st.echo():
             sample.loc[condition]
-
+            
     ## Excel/CSV        
 
     elif path == ("Pandas 기초", "Excel/CSV") :
@@ -1718,27 +1867,28 @@ start는 시작 인덱스, end는 끝 인덱스, step은 슬라이싱 간격을 
         
         st.write('**철도 Sheet의 데이터 불러오기**')
 
-        with st.echo():
+        st.code('''
             import pandas as pd
-            excel = pd.read_excel('data/서울시대중교통/seoul_transportation.xlsx', 
-                                sheet_name='철도')
+            excel = pd.read_excel('seoul_transportation.xlsx', 
+                                sheet_name='철도', engine='openpyxl')
             excel.head()
-        
+            ''')
         
         import pandas as pd
         excel = pd.read_excel('data/서울시대중교통/seoul_transportation.xlsx', 
-                                sheet_name='철도')
+                                sheet_name='철도', engine='openpyxl')
         st.write(excel.head())
 
         # st.divider()
 
         st.write('**버스 Sheet의 데이터 불러오기**')
 
-        with st.echo():
+        st.code('''
             import pandas as pd
-            excel = pd.read_excel('data/서울시대중교통/seoul_transportation.xlsx', 
+            excel = pd.read_excel('seoul_transportation.xlsx', 
                                 sheet_name='버스', engine='openpyxl')
             excel.head()
+            ''')
         excel = pd.read_excel('data/서울시대중교통/seoul_transportation.xlsx', 
                                 sheet_name='버스', engine='openpyxl')
         st.write(excel.head())
@@ -1746,11 +1896,15 @@ start는 시작 인덱스, end는 끝 인덱스, step은 슬라이싱 간격을 
         st.markdown(''':blue-background[sheet_name]을 None으로 지정하면 모든 sheet를 가지고 옵니다.''')
                     
         st.write('가지고 올 때는 OrderedDict로 가져오며, :blue-background[keys()]로 시트명을 조회할 수 있습니다.')
-        with st.echo():
+        st.code('''
             import pandas as pd
-            excel = pd.read_excel('data/서울시대중교통/seoul_transportation.xlsx', 
+            excel = pd.read_excel('seoul_transportation.xlsx', 
                                 sheet_name=None, engine='openpyxl')
             excel
+            ''')
+        excel = pd.read_excel('data/서울시대중교통/seoul_transportation.xlsx', 
+                                sheet_name=None, engine='openpyxl')
+        st.write(excel)
 
         st.divider()
         st.markdown(':blue-background[keys()]를 통해 엑셀이 포함하고 있는 시트를 조회할 수 있습니다.')
@@ -1767,12 +1921,16 @@ start는 시작 인덱스, end는 끝 인덱스, step은 슬라이싱 간격을 
                     )
         st.divider()
 
-        with st.echo():
+        st.code('''
             import pandas as pd
-            excel = pd.read_excel('data/서울시대중교통/seoul_transportation.xlsx', sheet_name='철도', engine='openpyxl')
+            excel = pd.read_excel('seoul_transportation.xlsx', sheet_name='철도', engine='openpyxl')
             excel.head()
+            ''')
+        excel = pd.read_excel('data/서울시대중교통/seoul_transportation.xlsx', 
+                                sheet_name='버스', engine='openpyxl')
         st.write(excel.head())
-            
+        
+
         st.divider()
 
         st.write('**시트명 없이 저장**')
@@ -1805,20 +1963,25 @@ start는 시작 인덱스, end는 끝 인덱스, step은 슬라이싱 간격을 
         st.divider()
         
         st.subheader(f"{idx.getSubIdx()}CSV-불러오기") ## 소단원02- 세부01
-        with st.echo():
+        st.code('''
             import pandas as pd
-            df = pd.read_csv('data/서울시주민등록인구/seoul_population.csv')
+            df = pd.read_csv('seoul_population.csv')
             df
+            ''')
+        df = pd.read_csv('data/서울시주민등록인구/seoul_population.csv')
+        st.write(df)
         st.divider()
 
         st.subheader(f"{idx.getSubIdx()}CSV-저장하기") ## 소단원02 - 세부02
         st.markdown('저장하는 방법은 excel과 유사합니다.\n'
                     '다만, csv파일 형식에는 sheet_name 옵션은 없습니다.')
 
-        with st.echo():
+        st.code('''
             import pandas as pd
-            df = pd.read_csv('data/서울시주민등록인구/seoul_population.csv')
+            df = pd.read_csv('seoul_population.csv')
             df
+            ''')
+        df = pd.read_csv('data/서울시주민등록인구/seoul_population.csv')
         st.divider()
 
         st.write(''':blue-background[to_csv()]로 csv 파일형식으로 저장할 수 있습니다.''')
@@ -1828,15 +1991,17 @@ start는 시작 인덱스, end는 끝 인덱스, step은 슬라이싱 간격을 
         st.divider()
 
         st.markdown("읽어드린 **Excel 파일도 csv**로 저장할 수 있습니다.")
-        with st.echo():
+        st.code('''
             import pandas as pd
-            excel = pd.read_excel('data/서울시대중교통/seoul_transportation.xlsx', 
-                                sheet_name='버스')
+            excel = pd.read_excel('seoul_transportation.xlsx', sheet_name='버스')
+                ''')
+        # excel = pd.read_excel('data/서울시대중교통/seoul_transportation.xlsx', 
+        #                         sheet_name='버스')
         code = '''excel.to_csv('sample1.csv', index=False)'''
         st.code(code, language="python")
         st.write('현재 디렉터리에서 sample1.csv가 저장된 것을 확인할 수 있습니다.')
         st.divider()
-
+    
     elif path == ("Pandas 기초", "Data 전처리"):
         st.header(f"{idx.getHeadIdx()}데이터 복사") ## 소단원01
         
@@ -2191,11 +2356,32 @@ start는 시작 인덱스, end는 끝 인덱스, step은 슬라이싱 간격을 
 
         st.write('여러 개의 DataFrame으로 이루어진 데이터를 합치는 방법인 concat()(연결), merge()(병합)에 대하여 다뤄보겠습니다.')
         st.write('- :blue-background[concat()]은 2개 이상의 DataFrame을 행 혹은 열 방향으로 연결합니다.')
-        
+        st.write('- 실습을 위해 **아래의 버튼**을 클릭하여 2개의 데이터를 다운로드 해주세요')
+
+        with open('data/유가정보/gas_first_2019.csv', "rb") as template_file:
+            template_byte = template_file.read()
+        with open('data/유가정보/gas_second_2019.csv', "rb") as template_file:
+            template_sec = template_file.read()
+        but1, but2 = st.columns([2, 6])
+        with but1:
+            button1 = st.download_button(label="download data",
+                            type="primary",
+                            data=template_byte,
+                           file_name = "gas_first_2019.csv"
+            )
+        with but2:
+            button2 = st.download_button(label="download data",
+                            type="primary",
+                            data=template_sec,
+                           file_name = "gas_second_2019.csv"
+            )
+        st.write('다운 받은 데이터를 현재 작업 중인 jupyter 디렉터리로 이동해주세요')
+
+
         st.divider()
 
         st.write('**1월부터 6월까지 상반기** 데이터 로드')
-        code = '''gas1 = pd.read_csv('data/유가정보/gas_first_2019.csv', encoding='euc-kr')'''
+        code = '''gas1 = pd.read_csv('gas_first_2019.csv', encoding='euc-kr')'''
         st.code(code)
         st.code('print(gas1.shape)\ngas1.head()')
         gas1 = pd.read_csv('data/유가정보/gas_first_2019.csv', encoding='euc-kr')
@@ -2203,9 +2389,11 @@ start는 시작 인덱스, end는 끝 인덱스, step은 슬라이싱 간격을 
         st.write(gas1.head())
         
         st.write('**7월 부터 12월 까지 하반기** 데이터 로드')
-        code =  '''gas2 = pd.read_csv('data/유가정보/gas_second_2019.csv', encoding='euc-kr')'''
+        code =  '''gas2 = pd.read_csv('gas_second_2019.csv', encoding='euc-kr')'''
+        st.code(code)
         gas2 = pd.read_csv('data/유가정보/gas_second_2019.csv', encoding='euc-kr')
-        code = '''print(gas2.shape)\ngas2.head()'''    
+        code = '''print(gas2.shape)\ngas2.head()'''
+        st.code(code)    
         st.write(gas2.shape)
         st.write(gas2.head())
 
@@ -2403,7 +2591,7 @@ start는 시작 인덱스, end는 끝 인덱스, step은 슬라이싱 간격을 
 
         st.divider()
 
-        st.subheader('mean() - 평균')
+        st.subheader(f"{idx.getSubIdx()}mean() - 평균")
 
         st.write('데이터의 **평균**')
         st.write('DataFrame 평균')
@@ -2683,7 +2871,7 @@ start는 시작 인덱스, end는 끝 인덱스, step은 슬라이싱 간격을 
         st.pyplot(plt)
         plt.close()
     
-    elif path == ("Matplotlib 기초", "그래프 그리기?"):
+    elif path == ("Matplotlib 기초", "그래프 그리기"):
         st.header(f"{idx.getHeadIdx()}그래프 그리기")
         st.subheader(f"{idx.getSubIdx()}단일 그래프")
         with st.echo():
@@ -3015,7 +3203,7 @@ Graph Title'''
         st.pyplot(plt)
         plt.close()
     
-    elif path == ("Matplotlib 기초", "그래프"):
+    elif path == ("Matplotlib 기초", "그래프 세부 속성"):
         st.header(f"{idx.getHeadIdx()}축 레이블(Label) 설정하기")
         st.write("**matplotlib.pyplot** 모듈의 **xlabel(), ylabel()** 함수를 사용하면 그래프의 x, y 축에 대한 레이블을 표시할 수 있습니다.")
         st.write("xlabel(), ylabel() 함수를 사용해서 그래프의 축에 레이블을 표시하는 방법에 대해 소개합니다.")
@@ -3101,7 +3289,7 @@ Graph Title'''
             plt.plot([1, 2, 3], [3, 6, 9])
             plt.plot([1, 2, 3], [2, 4, 9])
             # 타이틀 & font 설정
-            plt.title("이것은 타이틀 입니다", fontproperties=prop)
+            plt.title("이것은 타이틀 입니다")
 
             plt.show()
         st.pyplot(plt)
@@ -3119,7 +3307,7 @@ Graph Title'''
             plt.plot(np.arange(10), np.log(np.arange(10)))
 
             # 타이틀 & font 설정
-            plt.title('X, Y 틱을 조정합니다', fontsize=10)
+            plt.title('X, Y 틱을 조정합니다', fontsize=10, fontproperties=prop)
 
             # X축 & Y축 Label 설정
             plt.xlabel('X축', fontsize=10)
@@ -3530,7 +3718,7 @@ Graph Title'''
             plt.plot(np.arange(10), np.arange(10)*2 - 30, marker='*', linestyle=':', color='r')
 
             # 타이틀 & font 설정
-            plt.title('색상 설정 예제', fontsize=10)
+            plt.title('색상 설정 예제', fontsize=10, fontproperties=prop)
 
             # X축 & Y축 Label 설정
             plt.xlabel('X축', fontsize=10)
@@ -3607,7 +3795,7 @@ Graph Title'''
             plt.plot(np.arange(10), np.arange(10)*2 - 30, color='b', alpha=1.0)
 
             # 타이틀 & font 설정
-            plt.title('투명도 (alpha) 설정 예제', fontsize=10)
+            plt.title('투명도 (alpha) 설정 예제', fontsize=10, fontproperties=prop)
 
             # X축 & Y축 Label 설정
             plt.xlabel('X축', fontsize=10)
@@ -3692,18 +3880,18 @@ Graph Title'''
             plt.plot(np.arange(10), np.arange(10)*2 - 30, marker='*', linestyle=':', color='r')
 
             # 타이틀 & font 설정
-            plt.title('그리드 설정 예제', fontsize=10)
+            plt.title('그리드 설정 예제', fontsize=10, fontproperties=prop)
 
             # X축 & Y축 Label 설정
-            plt.xlabel('X축', fontsize=10)
-            plt.ylabel('Y축', fontsize=10)
+            plt.xlabel('X축', fontsize=10, fontproperties=prop)
+            plt.ylabel('Y축', fontsize=10, fontproperties=prop)
 
             # X tick, Y tick 설정
             plt.xticks(rotation=90)
             plt.yticks(rotation=30)
 
             # annotate 설정
-            plt.annotate('코로나 사태 발생 지점', xy=(3, -20), xytext=(3, -25), arrowprops=dict(facecolor='black', shrink=0.05))
+            plt.annotate('코로나 사태 발생 지점', xy=(3, -20), xytext=(3, -25), arrowprops=dict(facecolor='black', shrink=0.05), fontproperties=prop)
 
             # grid 옵션 추가
             plt.grid()
@@ -4448,7 +4636,7 @@ y'''
         st.pyplot(plt)
         plt.close()
 
-    elif path == ("Matplotlib 기초", "이외?") :
+    elif path == ("Matplotlib 기초", "Pie chart, 3D plot") :
         st.header(f"{idx.getHeadIdx()}Pie Chart")
         st.write("**파이 차트 (Pie chart, 원 그래프)** 는 범주별 구성 비율을 원형으로 표현한 그래프입니다.")
         st.write("위의 그림과 같이 **부채꼴의 중심각을 구성 비율에 비례** 하도록 표현합니다.")
@@ -4611,8 +4799,9 @@ y'''
         st.pyplot(plt)
         plt.close()
 
-    elif path == ("실습예제", "예제1"):
+    elif path == ("실습 프로젝트", "대기오염 데이터 분석"):
         st.header(f"{idx.getHeadIdx()}서울시 종로구 대기오염")
+        st.subheader("서울시 종로구 대기오염")
         st.write("CSV 파일의 2022년 서울시 종로구 대기오염 측정정보를 사용하여 데이터 로드, 분석 및 시각화 결론도출까지 실습을 진행합니다.")
 
         st.subheader(f"{idx.getSubIdx()}데이터 불러오기")
@@ -4793,15 +4982,797 @@ df_seoul.head()
         st.pyplot(plt)
         plt.close()
 
-    elif path == ("실습예제", "예제2"):
-        st.header(f"{idx.getHeadIdx()}공공자전거 수요 분석")
-        st.subheader("공공자전거 수요 분석")
-        st.write("기상정보를 활용하여 공공자전거 수요 분석을 수행합니다.")
+    elif path == ("실습 프로젝트", "지역별 음식점 소비 트렌드 분석"):
+        import io
+        st.header(f"{idx.getHeadIdx()}지역별 음식점 소비기반 트렌드 데이터")
+        st.write("지역별 음식점 소비 데이터를 활용하여 데이터 로드부터, 데이터 탐색 및 분석, 시각화, 결론 도출까지 실습 진행해보겠습니다.")
+        st.write('- 실습을 위해 **아래의 버튼**을 클릭하여 데이터를 다운로드 해주세요')
+        
+        with open('data/음식점소비트렌드/음식점소비트렌드데이터.csv', "rb") as template_file:
+            template_csv = template_file.read()
 
-        st.subheader(f"{idx.getSubIdx()}데이터 로드")
-        # st.write('- 실습을 위해 **아래의 버튼**을 클릭하여 데이터를 다운로드 해주세요')
+        st.download_button(label="download data",
+                            type="primary",
+                            data=template_csv,
+                           file_name = "음식점소비트렌드데이터.csv"
+        )
+        st.write('다운 받은 데이터를 현재 작업 중인 jupyter 디렉터리로 이동해주세요')
+        st.divider()
+
+        st.subheader(f"{idx.getSubIdx()} 컬럼 설명")
+        st.write("- sido_nm : 시도명칭")
+        st.write("- sgg_nm : 시군구 명칭")
+        st.write("- cafe_nm : 음식점업 명칭")
+        st.write("- facility_cnt_num : 식당수")
+        st.write("- residnt_cnt_sum : 인구수")
+        st.divider()
+
+        st.subheader(f"{idx.getSubIdx()}데이터 불러오기")
+        st.code("import pandas as pd\n\ndf_map = pd.read_csv('음식점소비트렌드데이터.csv')")
+        import pandas as pd
+        df_map = pd.read_csv('data/음식점소비트렌드/음식점소비트렌드데이터.csv')
+
+        st.code('df_map')
+        st.write(df_map)
+        st.divider()
+
+        st.header(f"{idx.getHeadIdx()}데이터 탐색하기(EDA)")
+        st.write('데이터 분석에는 **데이터를 탐색**하는 과정이 필요합니다.')
+        st.write('- 데이터를 다양한 각도에서 관찰하고 이해하는 과정')
+        st.write('- 데이터 분석 전 통계적은 방법으로 자료를 직관적으로 바라보는 과정')
+
+        st.divider()
+
+        st.subheader(f"{idx.getSubIdx()}통계 값으로 데이터 탐색하기")
+
+        st.code('# 행과 열의 수 확인\ndf_map.shape')
+        st.write(df_map.shape)
+
+        st.code('# 기본 정보 확인\ndf_map.info()')
+        buffer = io.StringIO()
+        df_map.info(buf=buffer)
+        s = buffer.getvalue()
+        st.text(s)
+
+        st.code('# 결측치 개수 확인 isnull()\ndf_map.isnull().sum()')
+        st.write(df_map.isnull().sum())
+
+        st.code('# 중복 데이터 확인 duplicated()\ndf_map.duplicated().sum()')
+        st.write(df_map.duplicated().sum())
+
+        st.code('# 앞의 다섯 개 확인\ndf_map.head()')
+        st.write(df_map.head())
+
+        st.code('# 마지막 다섯 개 확인\ndf_map.tail()')
+        st.write(df_map.tail())
+
+        st.code('# 통계 데이터 확인\ndf_map.describe()')
+        st.write(df_map.describe())
+
+        st.code('# 개별 칼럼 통계치 - 거주자 평균\ndf_map.POPLTN_CO.mean()')
+        st.write(df_map.POPLTN_CO.mean())
+
+        st.code('# 전체 식당 수\ndf_map.FOOD_FCLTY_CO.sum()')
+        st.write(df_map.FOOD_FCLTY_CO.sum())
+
+        st.code('# 특정 칼럼의 고유한 값 확인 value_counts()\nCTPRVN_NM.value_counts()')  
+        st.write(df_map.CTPRVN_NM.value_counts())
+
+        st.code('# SIGNGU_NM의 고유한 값\ndf_map.SIGNGU_NM.value_counts()')
+        st.write(df_map.SIGNGU_NM.value_counts())
+
+        st.code('# 특정 칼럼의 고유한 값 개수 확인 nunique() -  CTPRVN_NM\ndf_map.CTPRVN_NM.nunique()')
+        st.write(df_map.CTPRVN_NM.nunique())
+
+        st.code('# 식당 종류 확인\ndf_map.FOOD_FCLTY_NM.value_counts()')
+        st.write(df_map.FOOD_FCLTY_NM.value_counts())
+
+        st.divider()
+
+        st.subheader(f"{idx.getSubIdx()}조건 인덱싱으로 탐색하기")
+
+        st.code('''# 시군구 이름이 강서구인 데이터\ndf_map[df_map['SIGNGU_NM'] == '강서구']''')
+        st.write(df_map[df_map['SIGNGU_NM'] == '강서구'])
+
+        st.code('''# 서울시 강서구만 가져오기 --- 서울시 & 강서구\ndf_map[(df_map.CTPRVN_NM == '서울특별시') & (df_map.SIGNGU_NM == '강서구')]''')
+        st.write(df_map[(df_map.CTPRVN_NM == '서울특별시') & (df_map.SIGNGU_NM == '강서구')])
+
+        st.code('''# 서울시 강남구 식당수 --> df_map[강남구 & 서울특별시]['FOOD_FCLTY_NM'].sum()\ndf_map[(df_map.SIGNGU_NM == '강남구')&(df_map.CTPRVN_NM == '서울특별시')].FOOD_FCLTY_CO.sum()''')
+        st.write(df_map[(df_map.SIGNGU_NM == '강남구')&(df_map.CTPRVN_NM == '서울특별시')].FOOD_FCLTY_CO.sum())
+        st.divider()
+
+        st.subheader(f"{idx.getSubIdx()}피벗 테이블 만들기 :gray-background[pd.pivot_table()]")
+        st.markdown("- 주요 argument \n- df : 데이터프레임 \n- index는 기준점이 되는 칼럼 (보통 문자열)\n - values는 계산하려는 칼럼 (보통 숫자)\n - aggfunc는 기초통계함수 (mean, sum 등)")
+        
+        st.code('''# 피벗테이블 - 시군구별 식당수 합계 데이터프레임만들기
+df_식당수 = pd.pivot_table(df_map,
+                        index=['CTPRVN_NM', 'SIGNGU_NM'],
+                        values= 'FOOD_FCLTY_CO',
+                        aggfunc= 'sum')
+df_식당수''')
+        df_식당수 = pd.pivot_table(df_map,
+                        index=['CTPRVN_NM', 'SIGNGU_NM'],
+                        values= 'FOOD_FCLTY_CO',
+                        aggfunc= 'sum')
+        st.write(df_식당수)
+
+        st.code('''# 전체 식당 수 다시 확인
+    df_식당수.FOOD_FCLTY_CO.sum())''')
+        st.write(df_식당수.FOOD_FCLTY_CO.sum())
+        st.code('''df_map.FOOD_FCLTY_CO.sum()''')
+        st.write(df_map.FOOD_FCLTY_CO.sum())
+
+        st.code('''# 시군구별 인구수 합계 데이터프레임 만들기
+
+df_인구수 = pd.pivot_table(df_map,
+                        index=['CTPRVN_NM', 'SIGNGU_NM'],
+                        values= 'POPLTN_CO',
+                        aggfunc= 'min')
+df_인구수''')
+        df_인구수 = pd.pivot_table(df_map,
+                        index=['CTPRVN_NM', 'SIGNGU_NM'],
+                        values= 'POPLTN_CO',
+                        aggfunc= 'min')
+        st.write(df_인구수)
+        st.divider()
+
+        st.subheader(f"{idx.getSubIdx()}데이터 프레임 합치기")
+
+        st.code('''df_pivot = pd.concat([df_식당수,df_인구수], axis=1)
+df_pivot''')
+        df_pivot = pd.concat([df_식당수,df_인구수], axis=1)
+        st.write(df_pivot)
+
+        st.code('''df_pivot.info()''')
+        buffer = io.StringIO()
+        df_pivot.info(buf=buffer)
+        s = buffer.getvalue()
+        st.text(s)
+
+        st.code('''# 칼럼이름 변경{'FOOD_FCLTY_CO':'식당수', 'POPLTN_CO':'인구수'}
+
+df_pivot.rename(columns={'FOOD_FCLTY_CO':'식당수', 'POPLTN_CO':'인구수'}, inplace=True)
+df_pivot.head()''')
+        df_pivot.rename(columns={'FOOD_FCLTY_CO':'식당수', 'POPLTN_CO':'인구수'}, inplace=True)
+        st.write(df_pivot.head())
+
+        st.code('''# 서울시만 저장
+df_seoul = df_pivot.loc['서울특별시']
+df_seoul.head()''')
+        df_seoul = df_pivot.loc['서울특별시']
+        st.write(df_seoul.head())
+
+        st.code('''df_seoul.to_csv('seoul.csv')''')
+        # df_seoul.to_csv('seoul.csv')
+        
+        st.divider()
+
+        st.header(f"{idx.getHeadIdx()}데이터 시각화하기")
+
+        st.subheader(f"{idx.getSubIdx()}필요한 라이브러리 로드")
+
+        st.code('''# 시각화 라이브러리 로드 및 설치
+import pandas as pd
+import matplotlib as mpl
+import matplotlib.pyplot as plt
+%matplotlib inline
+
+# 유니코드에서  음수 부호설정
+mpl.rc('axes', unicode_minus=False)''')
+        
+        import pandas as pd
+        import matplotlib as mpl
+        import matplotlib.pyplot as plt
+        
+        mpl.rc('axes', unicode_minus=False)
+
+        st.code('''# 한글 지원 라이브러리 설치
+!pip install koreanize-matplotlib''')
+        st.divider()
+
+        st.subheader(f"{idx.getSubIdx()}식당수와 인구수 활용하여 시각화")
+
+        st.code('''# 가공한 서울시 데이터 불러오기
+df_seoul = pd.read_csv('seoul.csv')''')
+        st.code('df_seoul.head()')
+        df_seoul = pd.read_csv('data/seoul.csv')
+        st.write(df_seoul.head())
+
+        st.code('''# 서울시 식당분포 그리기
+plt.title('서울시 식당 분포')
+plt.plot(df_seoul['SIGNGU_NM'], df_seoul['식당수'], 'r*-')
+plt.show()''')
+
+        
+        plt.title('서울시 식당 분포')
+        plt.plot(df_seoul['SIGNGU_NM'], df_seoul['식당수'], 'r*-')
+        st.pyplot(plt)
+
+        st.write('글자가 겹쳐서 많이 어지럽습니다. **그래프 사이즈를 재설정**하고, **글씨를 회전**해보겠습니다.')
+
+        st.code('''# 화면 사이즈 설정과 글씨 회전
+plt.figure(figsize=(20, 4))
+plt.title('서울시 식당 분포')
+plt.plot(df_seoul['SIGNGU_NM'], df_seoul['식당수'], 'r*-')
+plt.show()''')
+        
+        # 화면 사이즈 설정과 글씨 회전
+        plt.figure(figsize=(20, 4))
+        plt.title('서울시 식당 분포')
+        plt.plot(df_seoul['SIGNGU_NM'], df_seoul['식당수'], 'r*-')
+        st.pyplot(plt)
+        st.write()
+        st.write('그래프 사이즈가 너무 커진 것 같습니다. 다시 적절하게 **조정**하고, **y축에 label**을 붙혀보겠습니다.')
+        st.write()
+
+        st.code('''plt.figure(figsize=(8, 4))
+plt.title('서울시 식당 분포')
+plt.plot(df_seoul['SIGNGU_NM'], df_seoul['식당수'], 'r*-')
+# x라벨을 회전
+plt.xticks(rotation=60) # 시계 반대방향으로 60도 회전
+plt.ylabel('문화체육관광시설 인근 음식점')
+plt.show()''')
+        
+        plt.figure(figsize=(8, 4))
+        plt.title('서울시 식당 분포')
+        plt.plot(df_seoul['SIGNGU_NM'], df_seoul['식당수'], 'r*-')
+        # x라벨을 회전
+        plt.xticks(rotation=60) # 시계 반대방향으로 60도 회전
+        plt.ylabel('문화체육관광시설 인근 음식점')
+        st.pyplot(plt)
+
+        st.write('서울시 식당 분포의 시각화 그래프가 완성되었습니다.')
 
 
+        st.code('''# 막대 그래프 그리기
+plt.figure(figsize=(8, 4))
+plt.title('서울시 식당 분포')
+# plt.bar()
+plt.bar(df_seoul['SIGNGU_NM'], df_seoul['식당수'], color='hotpink')
+# x라벨을 회전
+plt.xticks(rotation=60)
+plt.ylabel('문화체육관광시설 인근 음식점')
+plt.show()''')
+
+
+        plt.figure(figsize=(8, 4))
+        plt.title('서울시 식당 분포')
+        # plt.bar()
+        plt.bar(df_seoul['SIGNGU_NM'], df_seoul['식당수'], color='hotpink')
+        # x라벨을 회전
+        plt.xticks(rotation=60)
+        plt.ylabel('문화체육관광시설 인근 음식점')
+        st.pyplot(plt)
+
+        st.write('이번엔 **막대 그래프**를 그려보겠습니다. **색을 hotpink**로 설정할 것입니다.')
+
+        st.code('''# 인구수만 포함하는 데이터 프레임 만들기
+df_인구 = df_seoul.drop('식당수', axis=1)
+df_인구.set_index('SIGNGU_NM', inplace=True)
+df_인구''')
+        # 인구수만 포함하는 데이터 프레임 만들기
+        df_인구 = df_seoul.drop('식당수', axis=1)
+        df_인구.set_index('SIGNGU_NM', inplace=True)
+        st.write(df_인구)
+
+        st.code('''# 서울시 인구분포 막대그래프 그리기
+df_인구.plot(kind='bar', figsize=(10,5), color='orange')
+plt.xticks(rotation=60)
+plt.xlabel('') # xlabel 이름을 지우기
+plt.show()''')
+        
+        # 서울시 인구분포 막대그래프 그리기
+        df_인구.plot(kind='bar', figsize=(10,5), color='orange')
+        plt.xticks(rotation=60)
+        plt.xlabel('') # xlabel 이름을 지우기
+        st.pyplot(plt)
+
+        st.code('''# 수평 막대그래프 그리기 barh
+df_인구.plot(kind='barh', figsize=(10,5), color='orange')
+# plt.xticks(rotation=60)
+plt.ylabel('')
+plt.show()''')
+        
+        # 수평 막대그래프 그리기 barh
+        df_인구.plot(kind='barh', figsize=(10,5), color='orange')
+        # plt.xticks(rotation=60)
+        plt.ylabel('')
+        st.pyplot(plt)
+
+        st.code('''# 서브플롯 그리기
+fig = plt.figure(figsize=(10,5))
+ax = fig.add_subplot(1,1,1) # 1행 1열 1번째
+
+ax.bar(df_인구.index, df_인구['인구수'], color='orange')
+plt.xticks(rotation=60)
+plt.show()''')
+        
+        # 서브플롯 그리기
+        fig = plt.figure(figsize=(10,5))
+        ax = fig.add_subplot(1,1,1) # 1행 1열 1번째
+
+        ax.bar(df_인구.index, df_인구['인구수'], color='orange')
+        plt.xticks(rotation=60)
+        st.pyplot(plt)
+
+        st.code('''# 서브 플롯
+fig = plt.figure(figsize=(20,5))
+
+ax1 = fig.add_subplot(1,2,1)  # 1행 2열 중 첫번째(왼쪽)
+ax2 = fig.add_subplot(1,2,2)  # 1행 2열 중 두번째(오른쪽)
+# 인구수 막대그래프
+ax1.bar(df_인구.index, df_인구['인구수'], color='green')
+ax1.set_title('서울시 인구분포')
+ax1.set_xticklabels(df_인구.index, rotation=45)
+
+
+# 음식점수 꺽은선그래프
+ax2.plot(df_seoul['SIGNGU_NM'], df_seoul['식당수'], 'ro-')
+ax2.set_title('서울시 식당분포')
+ax2.set_xticklabels(df_seoul['SIGNGU_NM'], rotation=45)
+
+plt.show()''')
+        
+        # 서브 플롯
+        fig = plt.figure(figsize=(20,5))
+
+        ax1 = fig.add_subplot(1,2,1)  # 1행 2열 중 첫번째(왼쪽)
+        ax2 = fig.add_subplot(1,2,2)  # 1행 2열 중 두번째(오른쪽)
+        # 인구수 막대그래프
+        ax1.bar(df_인구.index, df_인구['인구수'], color='green')
+        ax1.set_title('서울시 인구분포')
+        ax1.set_xticklabels(df_인구.index, rotation=45)
+
+        # 음식점수 꺽은선그래프
+        ax2.plot(df_seoul['SIGNGU_NM'], df_seoul['식당수'], 'ro-')
+        ax2.set_title('서울시 식당분포')
+        ax2.set_xticklabels(df_seoul['SIGNGU_NM'], rotation=45)
+        st.pyplot(plt)
+
+        st.code('''# 서브 플롯
+fig = plt.figure(figsize=(20,10))
+
+ax1 = fig.add_subplot(2,1,1)  # 2행 1열 중 첫번째(위쪽)
+ax2 = fig.add_subplot(2,1,2)  # 2행 1열 중 두번째(아래쪽)
+# 인구수 막대그래프
+ax1.bar(df_인구.index, df_인구['인구수'], color='green')
+ax1.set_title('서울시 인구분포')
+ax1.set_xticklabels(df_인구.index, rotation=45)
+
+
+# 음식점수 꺽은선그래프
+ax2.plot(df_seoul['SIGNGU_NM'], df_seoul['식당수'], 'ro-')
+ax2.set_title('서울시 식당분포')
+ax2.set_xticklabels(df_seoul['SIGNGU_NM'], rotation=45)
+
+plt.show()''')
+        
+        # 서브 플롯
+        fig = plt.figure(figsize=(20,10))
+
+        ax1 = fig.add_subplot(2,1,1)  # 2행 1열 중 첫번째(위쪽)
+        ax2 = fig.add_subplot(2,1,2)  # 2행 1열 중 두번째(아래쪽)
+        # 인구수 막대그래프
+        ax1.bar(df_인구.index, df_인구['인구수'], color='green')
+        ax1.set_title('서울시 인구분포')
+        ax1.set_xticklabels(df_인구.index, rotation=45)
+
+
+        # 음식점수 꺽은선그래프
+        ax2.plot(df_seoul['SIGNGU_NM'], df_seoul['식당수'], 'ro-')
+        ax2.set_title('서울시 식당분포')
+        ax2.set_xticklabels(df_seoul['SIGNGU_NM'], rotation=45)
+
+        st.pyplot(plt)
+
+        st.code('''# 인구 100명당 식당수 비율 칼럼 생성
+df_seoul['식당비율'] = (df_seoul.식당수 / (df_seoul.인구수*0.01))
+df_seoul.head()''')
+        # 인구 100명당 식당수 비율 칼럼 생성
+        df_seoul['식당비율'] = (df_seoul.식당수 / (df_seoul.인구수*0.01))
+        st.write(df_seoul.head())
+
+        st.code('''# 식당비율 선그래프
+
+plt.figure(figsize=(8,4))
+plt.title('인구 수 대비 식당수')
+plt.plot(df_seoul.SIGNGU_NM, df_seoul.식당비율, 'b+-.')
+plt.xticks(rotation=45)
+plt.show()''')
+
+        plt.figure(figsize=(8,4))
+        plt.title('인구 수 대비 식당수')
+        plt.plot(df_seoul.SIGNGU_NM, df_seoul.식당비율, 'b+-.')
+        plt.xticks(rotation=45)
+        st.pyplot(plt)
+
+        st.code('''# 식당 수 막대 그래프도 같이 그리기
+
+plt.figure(figsize=(12,8))
+plt.title('서울시 구별 인구수 대비 식당수')
+plt.bar(df_seoul.SIGNGU_NM, df_seoul.식당수, color='pink')
+plt.plot(df_seoul.SIGNGU_NM, df_seoul.식당비율, 'b*-')
+plt.xticks(rotation=45)
+plt.show()''')
+
+        plt.figure(figsize=(12,8))
+        plt.title('서울시 구별 인구수 대비 식당수')
+        plt.bar(df_seoul.SIGNGU_NM, df_seoul.식당수, color='pink')
+        plt.plot(df_seoul.SIGNGU_NM, df_seoul.식당비율, 'b*-')
+        plt.xticks(rotation=45)
+        st.pyplot(plt)
+
+        st.code('''# twinx()함수로 2축 그래프 그리기
+
+
+plt.figure(figsize=(10,4))
+plt.title('서울특별시')
+plt.bar(df_seoul.SIGNGU_NM, df_seoul.식당수, color='green', label='음식점수')
+plt.legend(bbox_to_anchor=(0.15, 1.22))
+plt.xticks(rotation=-45)
+
+y_right = plt.twinx()
+y_right.plot(df_seoul.SIGNGU_NM, df_seoul.식당비율, color='purple', marker='o', label='인구 수 대비 음식점')
+plt.legend(bbox_to_anchor=(0.23, 1.12))
+plt.show()''')
+
+
+        plt.figure(figsize=(10,4))
+        plt.title('서울특별시')
+        plt.bar(df_seoul.SIGNGU_NM, df_seoul.식당수, color='green', label='음식점수')
+        plt.legend(bbox_to_anchor=(0.15, 1.22))
+        plt.xticks(rotation=-45)
+
+        y_right = plt.twinx()
+        y_right.plot(df_seoul.SIGNGU_NM, df_seoul.식당비율, color='purple', marker='o', label='인구 수 대비 음식점')
+        plt.legend(bbox_to_anchor=(0.23, 1.12))
+        st.pyplot(plt)
+
+        st.code('''#거주자순
+df_거주자순 = df_seoul.sort_values('인구수', ascending=False, ignore_index=True)
+df_거주자순''')
+        df_거주자순 = df_seoul.sort_values('인구수', ascending=False, ignore_index=True)
+        st.write(df_거주자순)
+
+        st.code('''#원그래프 그리기
+plt.figure(figsize=(8,8), dpi=100)
+df_거주자순['인구수'].plot(kind='pie', label='', autopct='%.1f%%', startangle = 45, labels=df_거주자순['SIGNGU_NM'], cmap='rainbow')
+plt.show()''')
+
+        plt.figure(figsize=(8,8), dpi=100)
+        df_거주자순['인구수'].plot(kind='pie', label='', autopct='%.1f%%', startangle = 45, labels=df_거주자순['SIGNGU_NM'], cmap='rainbow')
+        st.pyplot(plt)
+
+    elif path == ("실습 프로젝트", "날씨별 공공자전거 수요 분석"):
+        st.header(f"{idx.getHeadIdx()}날씨별 공공자전거 수요 분석")
+        st.write('''
+                자전거 대여소는 계절과 날씨에 따라 대여 건수의 변동이 심해, 운영 비용에 큰 영향을 미치고 있습니다. 따라서 날씨예보정보를 활용해 대여건수를 사전에 예측하고, 
+                 운영 비용을 조정하기 위한 데이터 분석 및 시각화 실습을 진행합니다.
+                 ''')
+        st.divider()
+
+        st.subheader(f"{idx.getSubIdx()}데이터 불러오기")
+        st.write('- 실습을 위해 **아래의 버튼**을 클릭하여 데이터를 다운로드 해주세요')
+        with open('data/zipfile/실습03.zip', "rb") as template_file:
+            template_zip = template_file.read()
+
+        st.download_button(label="download data",
+                            type="primary",
+                            data=template_zip,
+                           file_name = "실습03.zip"
+        )
+        with st.echo():
+            # 필요한 패키지 설치
+            import numpy as np
+            import pandas as pd
+            import seaborn as sns
+            import matplotlib.pyplot as plt
+
+            # 기상관측자료 데이터
+            #weather_info = pd.read_csv('data/실습03/기상관측자료202306.csv', encoding='cp949')
+            
+            #자전거 이용정보 데이터
+            files = [
+                "data/실습03/공공자전거이용정보0.csv",
+                "data/실습03/공공자전거이용정보1.csv",
+                # "data/실습03/공공자전거이용정보2.csv",
+                # "data/실습03/공공자전거이용정보3.csv",
+                # "data/실습03/공공자전거이용정보4.csv",
+                # "data/실습03/공공자전거이용정보5.csv"
+            ]
+
+            #파일 병합
+            bike_info = pd.concat([pd.read_csv(file, encoding='cp949') for file in files], ignore_index=True)
+
+            weather_info.head()
+            bike_info.head()
+
+        st.write("**weather_info**")
+        st.write(weather_info.head())
+        st.write("**bike_info**")
+        st.write(bike_info.head())
+        st.divider()
+        
+        st.header(f"{idx.getHeadIdx()}공공자전거 데이터 전처리")
+        st.subheader(f"{idx.getSubIdx()}집계 데이터 생성")
+        st.write('''날씨 정보와의 결합에 필요한 데이터(**이용건수**)를 생성하기 위해 **대여일자**, **대여시간**으로 집계해줍니다.''')
+        st.code('''
+                bike_df2 = bike_info.groupby(['대여일자', '대여시간'])['이용건수'].sum()
+                bike_df2 = bike_df2.reset_index() #인덱스 재 정렬 , 기존 인덱스를 열로
+                ''')
+        bike_df2 = bike_info.groupby(['대여일자', '대여시간'])['이용건수'].sum()
+        bike_df2 = bike_df2.reset_index() #인덱스 재 정렬 , 기존 인덱스를 열로
+        st.write(bike_df2.head())
+        st.divider()
+
+        st.subheader(f"{idx.getSubIdx()}파생변수 생성")
+        st.write('''대여일자에서 **년도, 월, 일, 요일, 공휴일** 변수를 생성합니다.''')
+        st.code('''
+                bike_df2['대여일자'] = pd.to_datetime(bike_df2['대여일자'])
+                bike_df2['년도'] = bike_df2['대여일자'].dt.year
+                bike_df2['월'] = bike_df2['대여일자'].dt.month
+                bike_df2['일'] = bike_df2['대여일자'].dt.day
+                bike_df2['요일(num)'] = bike_df2['대여일자'].dt.dayofweek
+                bike_df2['공휴일'] = 0  #0: 평일 1: 공휴일
+                
+                # 토요일, 일요일을 공휴일로 설정
+                bike_df2.loc[bike_df2['요일(num)'].isin([5,6]),['공휴일']] = 1
+                bike_df2.sample(10)
+                ''')
+        
+        bike_df2['대여일자'] = pd.to_datetime(bike_df2['대여일자'])
+        bike_df2['년도'] = bike_df2['대여일자'].dt.year
+        bike_df2['월'] = bike_df2['대여일자'].dt.month
+        bike_df2['일'] = bike_df2['대여일자'].dt.day
+        bike_df2['요일(num)'] = bike_df2['대여일자'].dt.dayofweek
+        bike_df2['공휴일'] = 0 #0: 평일 1: 공휴일
+        
+        # 토요일, 일요일을 공휴일로 설정
+        bike_df2.loc[bike_df2['요일(num)'].isin([5,6]),['공휴일']] = 1
+
+        st.write(bike_df2.sample(10))
+        st.divider()
+
+        st.header(f"{idx.getHeadIdx()}날씨 데이터 전처리")
+        st.subheader(f"{idx.getSubIdx()}날짜, 시간 컬럼 생성")
+        st.write('''자전거 이용정보와의 결합을 위해 **일시** 칼럼에서 **날짜**와 **시간** 정보를 추출합니다.''')
+        st.code('''
+                weather_info['날짜'] = weather_info['일시'].str[:10]
+                weather_info['시간'] = weather_info['일시'].str[11:13].astype(int)
+                ''')
+        
+        weather_info['날짜'] = weather_info['일시'].str[:10]
+        weather_info['시간'] = weather_info['일시'].str[11:13].astype(int)
+        st.divider()
+
+        st.subheader(f"{idx.getSubIdx()}컬럼 선택")
+        st.write("분석에 사용할 컬럼을 순서대로 가져와서 새 데이터 프레임을 생성합니다.")
+        st.code('''
+                weather_df = weather_info[['날짜', '시간', '기온(°C)', '강수량(mm)', '풍속(m/s)', '풍향(16방위)', '습도(%)','일조(hr)','일사(MJ/m2)', '적설(cm)','전운량(10분위)', '지면온도(°C)']]
+                
+                #칼럼명 변경
+                weather_df.columns = ['날짜', '시간', '기온', '강수량(mm)', '풍속(m/s)', '풍향(16방위)', '습도(%)','일조','일사', '적설(cm)','전운량',  '지면온도']
+                ''')
+        weather_df = weather_info[['날짜', '시간', '기온(°C)', '강수량(mm)', '풍속(m/s)', '풍향(16방위)', '습도(%)','일조(hr)','일사(MJ/m2)', '적설(cm)','전운량(10분위)', '지면온도(°C)']]
+        weather_df.columns = ['날짜', '시간', '기온', '강수량(mm)', '풍속(m/s)', '풍향(16방위)', '습도(%)','일조','일사', '적설(cm)','전운량',  '지면온도']
+        st.divider()
+        
+        st.subheader(f"{idx.getSubIdx()}결측치 확인")
+        st.code('''
+                weather_df.isnull().sum()
+                ''')
+        st.write(weather_df.isnull().sum())
+        st.write('''
+                **강수량, 적설, 일조, 일사**와 같이 NaN값이 0인 경우는 0으로 fill 해줍니다. **전운량, 기온, 지면온도, 풍향, 풍속**은 같은 일자의 이전시간대의 데이터로 대체합니다.
+                ''')
+        
+        st.write('''
+                - NaN 값을 0으로 fill (fillna)
+                 ''')
+        st.code('''
+                weather_df['강수량(mm)'].fillna(0, inplace = True)
+                weather_df['적설(cm)'].fillna(0, inplace = True)
+                weather_df['일조'].fillna(0, inplace = True)
+                weather_df['일사'].fillna(0, inplace = True)
+                ''')
+        weather_df['강수량(mm)'].fillna(0, inplace = True)
+        weather_df['적설(cm)'].fillna(0, inplace = True)
+        weather_df['일조'].fillna(0, inplace = True)
+        weather_df['일사'].fillna(0, inplace = True)
+
+        st.write('''
+                - NaN 값을 직전 데이터의 값으로 fill (ffill)
+                 ''')
+        st.code('''
+                # 날짜 시간으로 정렬
+                weather_df = weather_df.sort_values(['날짜','시간'])
+
+                # 전 값으로 
+                weather_df['기온'].fillna(method='ffill',inplace = True)
+                weather_df['풍속(m/s)'].fillna(method='ffill',inplace = True)
+                weather_df['풍향(16방위)'].fillna(method='ffill',inplace = True)
+                weather_df['전운량'].fillna(method='ffill',inplace = True)
+                weather_df['지면온도'].fillna(method='ffill',inplace = True)
+                ''')
+        weather_df = weather_df.sort_values(['날짜','시간'])
+        weather_df['기온'].fillna(method='ffill',inplace = True)
+        weather_df['풍속(m/s)'].fillna(method='ffill',inplace = True)
+        weather_df['풍향(16방위)'].fillna(method='ffill',inplace = True)
+        weather_df['전운량'].fillna(method='ffill',inplace = True)
+        weather_df['지면온도'].fillna(method='ffill',inplace = True)
+        
+        st.write("결측치를 제거한 결과를 확인해보겠습니다.")
+        st.code('''weather_df.isnull().sum()''')
+        st.write(weather_df.isnull().sum())
+        st.divider()
+
+        st.header(f"{idx.getHeadIdx()}데이터 결합")
+        st.write("전처리된 공공자전거 데이터와 날씨 데이터를 결합해 날씨별 자전거 대여 데이터를 만들어보겠습니다.")
+        st.code('''
+                weather_df['날짜'] = pd.to_datetime(weather_df['날짜'])
+
+                #데이터 타입 맞추기 
+                bike_mg = pd.merge (bike_df2, 
+                                    weather_df, 
+                                    left_on =['대여일자', '대여시간'], 
+                                    right_on = ['날짜', '시간']) #default = inner 
+                bike_mg.head()
+                ''')
+        weather_df['날짜'] = pd.to_datetime(weather_df['날짜'])
+        #데이터 타입 맞추기 
+        bike_mg = pd.merge (bike_df2, 
+                            weather_df, 
+                            left_on =['대여일자', '대여시간'], 
+                            right_on = ['날짜', '시간']) #default = inner 
+        st.write(bike_mg.head())
+
+        st.write("**대여일자, 날짜, 시간** 데이터가 중복되는 것을 확인할 수 있습니다. 중복되는 데이터를 제거해보겠습니다.")
+        st.code('''bike_mg = bike_mg.drop(['대여일자', '날짜', '시간'], axis = 1)''')
+        bike_mg = bike_mg.drop(['대여일자', '날짜', '시간'], axis = 1)
+        st.write(bike_mg.head())
+
+        ##처리된 데이터 저장 추가할말
+        st.divider()
+
+        st.header(f"{idx.getHeadIdx()}데이터 시각화")
+        st.write("원본 데이터프레임을 보존하기 위해 복사본을 생성한 후 시각화를 진행하겠습니다.")
+        st.code('''data = bike_mg.copy()''')
+        data = bike_mg.copy()
+
+        st.subheader(f"{idx.getSubIdx()}데이터 요약 통계")
+        st.write("데이터의 요약 통계를 확인해 정상적인 값인지 확인해보겠습니다.")
+        st.code('''
+                desc_df = data.describe().T
+                desc_df
+                ''')
+        desc_df = data.describe().T
+        st.write(desc_df)
+        st.divider()
+
+        st.subheader(f"{idx.getSubIdx()}이용건수 분포 시각화")
+        st.code('''sns.histplot(data['이용건수'])''')
+        fig, ax = plt.subplots()
+        sns.histplot(data['이용건수'], ax=ax)
+        st.pyplot(fig)
+
+        st.code('''sns.lineplot(x=data['일'], y=data['이용건수'])''')
+        fig, ax = plt.subplots()
+        sns.lineplot(x=data['일'].map(str), y=data['이용건수'], ax=ax)
+        st.pyplot(fig)
+        st.divider()
+        
+        st.subheader(f"{idx.getSubIdx()}피처의 분포 시각화")
+        st.write("원하는 컬럼을 선택해 피처의 분포를 확인합니다.")
+        st.code('''
+                con_cols = []
+                
+                for col in data.columns:
+                if (data[col].dtype == 'float64') or (col == '습도(%)'):
+                    con_cols.append(col)
+                ''')
+        con_cols = []
+                
+        for col in data.columns:
+            if (data[col].dtype == 'float64') or (col == '습도(%)'):
+                con_cols.append(col)
+        st.write("선택된 칼럼에 대한 피처의 분포를 시각화합니다.")
+        st.code('''
+                fig, axes = plt.subplots(2,5, figsize = (20,8))
+                ax = axes.flatten()
+                # axes = (n,n)형태 / ax = m형태
+                for i, col in enumerate(con_cols):
+                sns.histplot(data = data, x = col, ax = ax[i])
+                ''')
+        #############예제랑 좀 다름
+        fig, axes = plt.subplots(2,5, figsize = (20,8))
+        ax = axes.flatten()
+        # axes = (n,n)형태 / ax = m형태
+        for i, col in enumerate(con_cols):
+            sns.histplot(data = data, x = col, ax = ax[i])
+        st.pyplot(fig)
+        st.divider()
+
+        st.subheader(f"{idx.getSubIdx()}이용건수와 피처와의 관계")
+        st.write("공공자전거 이용 건수와 피처와의 관계를 시각화합니다.")
+        st.code('''
+                fig, axes = plt.subplots(2,2, figsize = (20,8))
+                
+                sns.barplot(data = data, x = '일', y= '이용건수', ax = axes[0,0])
+                sns.barplot(data = data, x = '공휴일', y= '이용건수', ax = axes[0,1])
+                sns.lineplot(data = data, x = '기온', y= '이용건수', ax = axes[1,0])
+                sns.lineplot(data = data, x = '강수량(mm)', y= '이용건수', ax = axes[1,1])
+
+                #제목 설정 
+                axes[0,0].set_title('일별 이용건수')
+                axes[0,1].set_title('공휴일여부에 따른 이용건수')
+                axes[1,0].set_title('기온별 이용건수')
+                axes[1,1].set_title('강수량(mm)별 이용건수')
+
+                # 간격조정
+                fig.subplots_adjust(hspace = 0.4)
+                ''')
+        fig, axes = plt.subplots(2,2, figsize = (20,8))
+        sns.barplot(data = data, x = '일', y= '이용건수', ax = axes[0,0])
+        sns.barplot(data = data, x = '공휴일', y= '이용건수', ax = axes[0,1])
+        sns.lineplot(data = data, x = '기온', y= '이용건수', ax = axes[1,0])
+        sns.lineplot(data = data, x = '강수량(mm)', y= '이용건수', ax = axes[1,1])
+        axes[0,0].set_title('일별 이용건수')
+        axes[0,1].set_title('공휴일여부에 따른 이용건수')
+        axes[1,0].set_title('기온별 이용건수')
+        axes[1,1].set_title('강수량(mm)별 이용건수')
+        fig.subplots_adjust(hspace = 0.4)        
+        st.pyplot(fig)
+
+        st.write('''
+                공휴일 이용건수보다 평일 이용건수가 더 많음
+                -> 분석 결과 작성
+                ''')
+        st.divider()
+
+        st.subheader(f"{idx.getSubIdx()}평일과 공휴일 이용건수 차이")
+        st.write('''평일과 공휴일에는 완전히 다른 이용 현황을 보이는 것을 확인할 수 있습니다.
+                 평일의 경우 오전 8시, 오후 6시에 이용건수 피크를 보이는데, 출퇴근으로 인한 영향으로 추측해볼 수 있겠습니다.
+                 ''')
+        st.code('''plt.figure(figsize = (15,3))
+sns.pointplot(x='대여시간', y='이용건수',data = data, hue = '공휴일')
+                ''')
+        fig, ax = plt.subplots()
+        plt.figure(figsize = (15,3))
+        sns.pointplot(x='대여시간', y='이용건수',data = data, hue = '공휴일', ax=ax)
+        st.pyplot(fig)
+        st.divider()
+
+        st.subheader(f"{idx.getSubIdx()}요일에 따른 이용건수 차이")
+        st.write("토요일에 이용건수가 더 많고, 토요일 오후에 전반적으로 이용률이 높은 모습을 보입니다.")
+        st.code('''plt.figure(figsize = (15,3))
+sns.pointplot(x='대여시간', y='이용건수',data = data, hue = '요일(num)'))
+                ''')
+        fig, ax = plt.subplots()
+        plt.figure(figsize = (15,3))
+        sns.pointplot(x='대여시간', y='이용건수',data = data, hue = '요일(num)', ax=ax)
+        st.pyplot(fig)
+        st.divider()
+
+        st.subheader(f"{idx.getSubIdx()}요일에 따른 이용건수 차이(box)")
+        st.write("휴일은 상대적으로 변동성이 적고, 평일은 변동성이 큰 편입니다.")
+        st.code('''
+                sns.boxplot(x='요일(num)', y='이용건수',data = data)
+                dofw = list('월화수목금토일')
+                plt.xticks([0,1,2,3,4,5,6],dofw)
+                plt.show()
+                ''')
+        fig, ax = plt.subplots()
+        plt.figure(figsize = (15,3))
+        sns.boxplot(x='요일(num)', y='이용건수',data = data, ax=ax)
+        # 요일 이름 설정
+        dofw = list('월화수목금토일')
+        ax.set_xticks([0, 1, 2, 3, 4, 5, 6])
+        ax.set_xticklabels(dofw)
+        st.pyplot(fig)
+        st.divider()
+
+        #######분석 결과
+        
     else :
         st.error("Content Not Found !")
 
