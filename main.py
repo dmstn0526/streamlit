@@ -2649,6 +2649,12 @@ start는 시작 인덱스, end는 끝 인덱스, step은 슬라이싱 간격을 
         import numpy as np
         st.header(f"{idx.getHeadIdx()}기본 사용")
         st.write("Matplotlib 라이브러리를 이용해서 그래프를 그리는 일반적인 방법에 대해 소개합니다.")
+        st.subheader(f"{idx.getSubIdx()}패키지 설치")
+        st.write("- matplotlib 설치 명령어를 통해 설치할 수 있습니다.")
+        st.code('''pip install matplotlib''', language='python')
+        st.write("- 설치한 패키지는 import를 사용하여 호출합니다.")
+        st.code('''import matplotlib''', language='python')
+        st.divider()
         st.subheader(f"{idx.getSubIdx()}기본 그래프 그리기")
         code = '''
 import matplotlib.pyplot as plt
