@@ -12,23 +12,55 @@ from streamlit_float import *
 import streamlit_analytics
 from streamlit_server_state import server_state, server_state_lock
 import requests
+from fastapi import FastAPI, Request
+from pydantic import BaseModel
+import uvicorn
+from typing import Dict
+from collections import defaultdict
 
-# def increment_visitor_count():
-#     with server_state_lock["visitor_count"]:
-#         if "visitor_count" not in server_state:
-#             server_state["visitor_count"] = 0  # 초기화
-#         server_state["visitor_count"] += 1  # 방문자 수 증가
+FASTAPI_SERVER_URL = "http://localhost:8000"
 
-def get_ip():
+app = FastAPI()
+
+# Initialize the visitor count dictionary
+visitor_count: Dict[str, int] = defaultdict(int)
+total_unique_visitors: int = 0
+
+@app.post("/visit")
+async def record_visit(request: Request):
+    global total_unique_visitors
+    
+    # Extract user IP from the request
+    ip_address = request.headers.get('X-Forwarded-For', request.client.host)
+    
+    # Increment the visit count for the IP address
+    if visitor_count[ip_address] == 0:
+        total_unique_visitors += 1
+    visitor_count[ip_address] += 1
+    
+    return {"ip": ip_address, "visit_count": visitor_count[ip_address], "total_unique_visitors": total_unique_visitors}
+
+@app.get("/total_visitors")
+async def get_total_visitors():
+    return {"total_unique_visitors": total_unique_visitors}
+
+def record_visit():
     try:
-        response = requests.get('https://api.ipify.org?format=json', timeout=5)
+        # API 호출하여 방문 기록을 기록
+        response = requests.post(f"{FASTAPI_SERVER_URL}/visit")
         response.raise_for_status()
-        ip_info = response.json()
-        return ip_info.get('ip', 'Unable to retrieve IP address')
     except requests.RequestException as e:
-        return f"Error: {str(e)}"
-if 'visitor_count' not in server_state:
-    server_state.visitor_count = {}
+        st.error(f"Error recording visit: {e}")
+
+def get_total_visitors():
+    try:
+        # API 호출하여 총 방문자 수를 가져옴
+        response = requests.get(f"{FASTAPI_SERVER_URL}/total_visitors")
+        response.raise_for_status()
+        return response.json()["total_unique_visitors"]
+    except requests.RequestException as e:
+        st.error(f"Error fetching total visitors: {e}")
+        return 0
 
 class IndexAllocator:
     def __init__(self):
@@ -6706,25 +6738,8 @@ def goback_btn() :
 def main() :
     float_init()
     page, topic, chapter = init_session_state()
-    user_ip = get_ip()
-    if 'visitor_count' not in server_state:
-        server_state.visitor_count = {}
-
-    # Initialize the visit-tracking flag in session state
-    if 'visit_counted' not in st.session_state:
-        st.session_state.visit_counted = False
-
-    # Only increment the visit count if it hasn't been counted yet in this session
-    if not st.session_state.visit_counted and user_ip != "Unable to retrieve IP address":
-        with server_state_lock['visitor_count']:
-            if user_ip in server_state.visitor_count:
-                server_state.visitor_count[user_ip] += 1
-            else:
-                server_state.visitor_count[user_ip] = 1
-        # Mark the current session as counted
-        st.session_state.visit_counted = True
-
-    total_visitors = len(server_state.visitor_count)
+    record_visit()
+    total_visitors = get_total_visitors()
 
     if page == 'page_topic':
         show_topic(topic)
@@ -6750,8 +6765,6 @@ def main() :
                 f"""
                 <div style="position: relative; height: 1rem;">
                 <div style="position: absolute; right: 0rem; bottom: 0rem; color: gray;">
-                    <p>{f"User's IP address: {user_ip}\n"}</p>
-                    <p>{f"You have visited {server_state.visitor_count[user_ip]} times.\n"} views</p>
                     <p>{f"Total number of unique visitors: {total_visitors}"}</p>
                         </div>
                 </div>
