@@ -6704,6 +6704,17 @@ def main() :
     float_init()
     page, topic, chapter = init_session_state()
     user_ip = get_ip()
+    if 'visitor_count' not in server_state:
+        server_state.visitor_count = {}  # Initialize the visitor count dictionary
+
+    # Update the visit count for the current IP address
+    with server_state_lock['visitor_count']:
+        if user_ip in server_state.visitor_count:
+            server_state.visitor_count[user_ip] += 1
+        else:
+            server_state.visitor_count[user_ip] = 1
+            
+    total_visitors = len(server_state.visitor_count)
 
     if page == 'page_topic':
         show_topic(topic)
@@ -6729,7 +6740,15 @@ def main() :
                 f"""
                 <div style="position: relative; height: 1rem;">
                 <div style="position: absolute; right: 0rem; bottom: 0rem; color: gray;">
-                    {f"User's IP address: {user_ip}"} views
+                    {f"User's IP address: {user_ip}"}
+                        </div>
+                </div>
+                <div style="position: absolute; right: 0rem; bottom: 0rem; color: gray;">
+                    {f"You have visited {server_state.visitor_count[user_ip]} times."} views
+                        </div>
+                </div>
+                <div style="position: absolute; right: 0rem; bottom: 0rem; color: gray;">
+                    {f"Total number of unique visitors: {total_visitors}"}
                         </div>
                 </div>
                 """,
