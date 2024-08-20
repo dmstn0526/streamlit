@@ -27,6 +27,8 @@ def get_ip():
         return ip_info.get('ip', 'Unable to retrieve IP address')
     except requests.RequestException as e:
         return f"Error: {str(e)}"
+if 'visitor_count' not in server_state:
+    server_state.visitor_count = {}
 
 class IndexAllocator:
     def __init__(self):
