@@ -8,6 +8,24 @@ fpath = os.path.join(os.getcwd(), "customfont/NanumGothic-Regular.ttf")
 prop = fm.FontProperties(fname=fpath)
 import numpy as np
 import seaborn as sns
+from streamlit_float import *
+import streamlit_analytics
+from streamlit_server_state import server_state, server_state_lock
+import requests
+
+# def increment_visitor_count():
+#     with server_state_lock["visitor_count"]:
+#         if "visitor_count" not in server_state:
+#             server_state["visitor_count"] = 0  # 초기화
+#         server_state["visitor_count"] += 1  # 방문자 수 증가
+
+def get_ip():
+    try:
+        response = requests.get('https://api.ipify.org?format=json')
+        ip_info = response.json()
+        return ip_info.get('ip', 'Unable to retrieve IP address')
+    except Exception as e:
+        return f"Error: {str(e)}"
 
 class IndexAllocator:
     def __init__(self):
@@ -43,6 +61,12 @@ def load_contents() :
 CONTENTS , TOPICS = load_contents()
 
 def init_session_state() :
+    if "count" not in server_state:
+        server_state.count = 0
+
+    if 'init' not in st.session_state:
+        st.session_state['init'] = True
+        server_state.count += 1
     if 'page' not in st.session_state:
         st.session_state['page'] = 'page_topic'
 
@@ -75,6 +99,9 @@ def update_session_state(*args) :
         st.session_state['page'] = 'page_topic'
         st.session_state['chapter'] = None
     
+def add_line_breaks(text, interval):
+    return "<br>".join([text[i:i + interval] for i in range(0, len(text), interval)])
+
 def show_topic(topic):
     chapters = CONTENTS[topic]
 
@@ -89,18 +116,20 @@ matplotlib.pyplot 모듈의 각각의 함수를 사용해서 그래프 영역을
     }
     st.info(info_txt[topic])
     
-    table = [st.columns(3)] * ((len(chapters) + 2) // 3)
+    table = [st.columns(2)] * ((len(chapters) + 1) // 2)
     for i, title in enumerate(chapters):
-        with table[i // 3][i % 3]:
+        with table[i // 2][i % 2]:
+        #     formatted_title = add_line_breaks(title, 7)  # 7글자마다 줄바꿈
             card = st.container(height=200, border=True)
             subcard = card.container(height=110, border=False)
+        #     subcard.markdown(f"<h3 style='text-align: left;'>{formatted_title}</h3>", unsafe_allow_html=True)
             subcard.subheader(title)
 
             card.button("학습하기", 
-                        key=f"btn_{i}",
-                        on_click=update_session_state, 
-                        args=('change_chapter', {'chapter':title}),
-                        use_container_width=True)
+                    key=f"btn_{i}",
+                    on_click=update_session_state, 
+                    args=('change_chapter', {'chapter':title}),
+                    use_container_width=True)
 
 ### pandas에서 사용할 타이타닉 데이터셋
 def pandas_dataset():
@@ -135,7 +164,7 @@ def show_chapter(topic, chapter):
     ### Python 컨텐츠 작성
     if path == ("파이썬 기초", "자료형") :
         st.header(f"{idx.getHeadIdx()}숫자형")
-        st.write("숫자형에는 정수형(Integer)과 실수형(Float)이 있습니다. 정수는 양의 정수와 음의 정수, 0이 될 수 있는 숫자입니다. 실수는 소수점이 포함된 숫자를 의미합니다.")
+        st.write("숫자형에는 **정수형**(Integer)과 **실수형**(Float)이 있습니다. 정수는 양의 정수와 음의 정수, 0이 될 수 있는 숫자입니다. 실수는 소수점이 포함된 숫자를 의미합니다.")
         st.code('''
                 #정수형(Integer)
                 a = 123
@@ -144,7 +173,7 @@ def show_chapter(topic, chapter):
                 #실수형(Floating)
                 a = 3.14
                 b = 100.0
-                ''')
+                ''',line_numbers=True)
         st.divider()
 
         st.subheader(f"{idx.getSubIdx()}숫자형의 연산 - 산술 연산자")
@@ -184,7 +213,7 @@ def show_chapter(topic, chapter):
 
                 print( a % b )
                 #출력 : 1
-                ''')
+                ''',line_numbers=True)
         st.divider()
 
         st.subheader(f"{idx.getSubIdx()}숫자형의 연산 - 복합 연산자")
@@ -241,7 +270,7 @@ def show_chapter(topic, chapter):
                 a %= 9  #a = a % 9
                 print(a)
                 #출력 : 4
-                ''')
+                ''',line_numbers=True)
         st.divider()
         
         st.header(f"{idx.getHeadIdx()}문자열")
@@ -254,19 +283,19 @@ def show_chapter(topic, chapter):
                 str2 = 'Python is Easy'
                 print(str2)
                 #출력 : Python is Easy
-                ''')
+                ''',line_numbers=True)
         st.divider()
         st.subheader(f"{idx.getSubIdx()}문자열 길이 구하기")
-        st.write("문자열의 길이는 다음과 같이 len 함수를 사용하면 구할 수 있습니다.")
+        st.write("문자열의 길이는 다음과 같이 **len** 함수를 사용해 구할 수 있습니다.")
         st.code('''
                 a = "Life is too short"
                 print(len(a))
                 #출력 : 17
-                ''')
+                ''',line_numbers=True)
         st.divider()
         
         st.subheader(f"{idx.getSubIdx()}문자열 인덱싱")
-        st.write("인덱싱이란 문자열에서 문자를 추출하는 것입니다. 문자열의 문자에 접급하기 위해서 '문자열[인덱스]' 형식으로 접든할 수 있습니다. 이때 인덱스는 0부터 시작합니다.")
+        st.write("인덱싱이란 문자열에서 문자를 추출하는 것입니다. 문자열의 문자에 접근하기 위해서 '**문자열[인덱스]**' 형식으로 접근할 수 있습니다. 이때 인덱스는 0부터 시작합니다.")
         st.code('''
                 str = "Hello World"
                 
@@ -274,7 +303,7 @@ def show_chapter(topic, chapter):
                 print(str[3])   #출력 : l
                 print(str[-1])   #출력 : d
                 print(str[-5])   #출력 : W
-                ''')
+                ''',line_numbers=True)
         st.write("인덱스의 (-) 는 문자열을 뒤에서부터 읽기 위해 사용합니다. 즉, str[-1]은 뒤에서 첫 번째가 되는 문자를 의미하며, str[-5]는 뒤에서 5번째 문자를 의미합니다.")
         st.divider()
 
@@ -283,13 +312,13 @@ def show_chapter(topic, chapter):
                  
                         문자열[start : end : step]
                 
-start는 시작 인덱스, end는 끝 인덱스, step은 슬라이싱 간격을 의미합니다. step의 기본 값은 1으로 생략 가능합니다.
+**start**는 시작 인덱스, **end**는 끝 인덱스, **step**은 슬라이싱 간격을 의미합니다. step의 기본 값은 1으로 생략 가능합니다.
                  ''')
         st.code('''
                 str = "Life is too short, You need Python"
                 print(str[0:4])
                 # 출력 : Life
-                ''')
+                ''',line_numbers=True)
         
         st.write('''
                 슬라이싱할 때 start를 생략하면 처음부터 end까지, end를 생략하면 start부터 끝까지 문자열을 추출합니다.
@@ -304,7 +333,7 @@ start는 시작 인덱스, end는 끝 인덱스, step은 슬라이싱 간격을 
                 # end 생략
                 print(str[ -6: ])
                 # 출력 : Python
-                ''')
+                ''',line_numbers=True)
         st.divider()
         st.subheader(f"{idx.getSubIdx()}문자열 관련 함수")
         st.write('''
@@ -312,116 +341,116 @@ start는 시작 인덱스, end는 끝 인덱스, step은 슬라이싱 간격을 
                  ''')
         st.code('''
                 a = "hobby"
-                print( a.count('b') )   #문자열 중 문자 b의 개수 리턴
+                print(a.count('b'))   #문자열 중 문자 b의 개수 리턴
                 #출력 : 2
-                ''')
+                ''',line_numbers=True)
         
         st.write('''
                 - **find()** : 위치 알려 주기1
                  ''')
         st.code('''
                 a = "Python is the best choice"
-                print( a.find('b') )   #문자열 중 문자 b가 처음으로 나온 위치 리턴
+                print(a.find('b'))   #문자열 중 문자 b가 처음으로 나온 위치 리턴
                 #출력 : 14
 
-                print( a.find('k') )   #찾는 문자나 문자열이 존재하지 않는다면 -1을 리턴
+                print(a.find('k'))   #찾는 문자나 문자열이 존재하지 않는다면 -1을 리턴
                 #출력 : -1
-                ''')
+                ''',line_numbers=True)
         
         st.write('''
                 - **index()** : 위치 알려 주기2
                  ''')
         st.code('''
                 a = "Life is too short"
-                print( a.index('t') )   #문자열 중 문자 t가 맨 처음으로 나온 위치를 리턴
+                print(a.index('t'))   #문자열 중 문자 t가 맨 처음으로 나온 위치를 리턴
                 #출력 : 8
 
-                print( a.index('k') )   #찾는 문자나 문자열이 존재하지 않는다면 오류 발생
+                print(a.index('k'))   #찾는 문자나 문자열이 존재하지 않는다면 오류 발생
                 #Traceback (most recent call last):
                 #File "<stdin>", line 1, in <module>
                 #ValueError: substring not found
-                ''')
+                ''',line_numbers=True)
         
         st.write('''
                 - **join()** : 문자열 삽입
                  ''')
         st.code('''
-                print( ",".join('abcd') )   #abcd 문자열의 각각의 문자 사이에 ‘,’를 삽입
+                print(",".join('abcd'))   #abcd 문자열의 각각의 문자 사이에 ‘,’를 삽입
                 #출력 : a,b,c,d
-                ''')
+                ''',line_numbers=True)
         
         st.write('''
                 - **upper()** : 소문자를 대문자로 바꾸기
                  ''')
         st.code('''
                 a = "hi"
-                print( a.upper() )
+                print(a.upper())
                 #출력 : 'HI'
-                ''')
+                ''',line_numbers=True)
         
         st.write('''
                 - **lower()** : 대문자를 소문자로 바꾸기
                  ''')
         st.code('''
                 a = "HELLO"
-                print( a.lower() )
+                print(a.lower())
                 #출력 : 'hello'
-                ''')
+                ''',line_numbers=True)
         
         st.write('''
                 - **lstrip()** : 왼쪽 공백 지우기
                  ''')
         st.code('''
                 a = "  hi  "
-                print( a.lstrip() )
+                print(a.lstrip())
                 #출력 : 'hi  '
-                ''')
+                ''',line_numbers=True)
         
         st.write('''
                 - **rstrip()** : 오른쪽 공백 지우기
                  ''')
         st.code('''
                 a = "  hi  "
-                print( a.lstrip() )
+                print(a.rstrip())
                 #출력 : '  hi'
-                ''')
+                ''',line_numbers=True)
         
         st.write('''
                 - **strip()** : 양쪽 공백 지우기
                  ''')
         st.code('''
                 a = "  hi  "
-                print( a.lstrip() )
+                print(a.strip())
                 #출력 : 'hi'
-                ''')
+                ''',line_numbers=True)
         
         st.write('''
                 - **replace()** : 문자열 바꾸기
                  ''')
         st.code('''
                 a = "Good mornig"
-                print( a.replace("mornig", "evening") )  #replace(바뀔_문자열, 바꿀_문자열)
+                print(a.replace("mornig", "evening"))  #replace(바뀔_문자열, 바꿀_문자열)
                 #출력 : Good evening
-                ''')
+                ''',line_numbers=True)
         st.write("replace 함수는 replace(바뀔_문자열, 바꿀_문자열)처럼 사용해서 문자열 안의 특정한 값을 다른 값으로 치환해 줍니다.")
         st.write('''
                 - **split()** : 문자열 나누기
                  ''')
         st.code('''
                 a = "Life is too short"
-                print( a.split() )
+                print(a.split())
                 #출력 : ['Life', 'is', 'too', 'short']
 
                 b = "a:b:c:d"
-                print( b.split(':') )
+                print(b.split(':'))
                 #출력 : ['a', 'b', 'c', 'd']
-                ''')
+                ''',line_numbers=True)
         st.write("split 함수는 a.split()처럼 괄호 안에 아무 값도 넣어 주지 않으면 공백([Space], [Tab], [Enter])을 기준으로 문자열을 나누어 줍니다. 만약 b.split(':')처럼 괄호 안에 특정 값이 있을 경우에는 괄호 안의 값을 구분자로 해서 문자열을 나누어 줍니다.")    
         st.divider()
         
         st.header(f"{idx.getHeadIdx()}불")
         st.write('''
-                불(bool)이란 참(True)과 거짓(False)을 나타내는 자료형입니다. 불 자료형은 다음 2가지 값만을 가질 수 있습니다.
+                불(bool)이란 **참**(True)과 **거짓**(False)을 나타내는 자료형입니다. 불 자료형은 다음 2가지 값만을 가질 수 있습니다.
 
                 - True: 참을 의미한다.
                 - False: 거짓을 의미한다.
@@ -439,7 +468,7 @@ start는 시작 인덱스, end는 끝 인덱스, step은 슬라이싱 간격을 
                 a = 5 < 3
                 print(a)
                 #출력 : False
-                ''')
+                ''',line_numbers=True)
         st.divider()
         st.subheader(f"{idx.getSubIdx()}자료형의 참과 거짓")
         st.write('''
@@ -462,7 +491,7 @@ start는 시작 인덱스, end는 끝 인덱스, step은 슬라이싱 간격을 
         st.divider()
         
         st.header(f"{idx.getHeadIdx()}리스트")
-        st.write("리스트는 데이터들을 편리하게 관리하기 위해 묶어서 관리하는 자료형 중의 하나 입니다. 리스트 안에는 어떠한 자료형도 포함할 수 있습니다.")
+        st.write("리스트는 데이터들을 편리하게 관리하기 위해 묶어서 관리하는 자료형 중의 하나입니다. 리스트 안에는 어떠한 자료형도 포함할 수 있습니다.")
         st.code('''
                 a = []  #값이 없는 리스트
                 print(a)
@@ -483,43 +512,43 @@ start는 시작 인덱스, end는 끝 인덱스, step은 슬라이싱 간격을 
                 a = [1,2,['P',3]]  #리스트 안에 입력된 리스트
                 print(a)
                 #출력 : [1, 2, ['P', 3]]
-                ''')
+                ''',line_numbers=True)
         st.divider()
         st.subheader(f"{idx.getSubIdx()}리스트의 인덱싱")
         st.write("리스트 역시 문자열처럼 인덱싱을 적용할 수 있습니다.")
         st.code('''
                 a = [1, 2, 3]
 
-                print( a[0] )
+                print(a[0])
                 #출력 : 1
 
-                print( a[0] + a[2] )
+                print(a[0] + a[2])
                 #출력 : 4
 
-                print( a[-1] )
+                print(a[-1])
                 #출력 : 3
-                ''')
+                ''',line_numbers=True)
         
         st.write("리스트 안에 리스트가 있는 경우에도 인덱싱이 가능합니다.")
         st.code('''
                 a = [1, 2, 3, ['a', 'b', 'c']]
 
-                print( a[0] )
+                print(a[0])
                 #출력 : 1
 
-                print( a[-1] )
+                print(a[-1])
                 #출력 : ['a', 'b', 'c']
 
-                print( a[-1][1] )
+                print(a[-1][1])
                 #출력 : 'b'
-                ''')
+                ''',line_numbers=True)
         st.divider()
 
         st.subheader(f"{idx.getSubIdx()}리스트의 슬라이싱")
         st.write("문자열과 마찬가지로 리스트에서도 슬라이싱 기법을 적용할 수 있습니다.")
         st.code('''
                 a = [1, 2, 3, 4, 5]
-                print( a[0:2])
+                print(a[0:2])
                 #출력 : [1, 2]
 
                 print(a[:2])
@@ -527,15 +556,15 @@ start는 시작 인덱스, end는 끝 인덱스, step은 슬라이싱 간격을 
 
                 print(a[2:])
                 #출력 : [3, 4, 5]
-                ''')
+                ''',line_numbers=True)
         st.divider()
         st.subheader(f"{idx.getSubIdx()}리스트 길이 구하기")
-        st.write("리스트 길이를 구하기 위해서는 다음처럼 len 함수를 사용해야 합니다.")
+        st.write("리스트 길이를 구하기 위해서는 다음처럼 **len** 함수를 사용해야 합니다.")
         st.code('''
                 a = [1, 2, 3]
                 print(len(a))
                 #출력 : 3
-                ''')
+                ''',line_numbers=True)
         st.write("len은 문자열, 리스트 외에 앞으로 배울 튜플과 딕셔너리에도 사용할 수 있는 함수입니다.")
         
         st.divider()
@@ -547,17 +576,17 @@ start는 시작 인덱스, end는 끝 인덱스, step은 슬라이싱 간격을 
 
                 print(a)
                 #출력 : [1, 2, 4]
-                ''')
+                ''',line_numbers=True)
         st.divider()
         st.subheader(f"{idx.getSubIdx()}리스트 요소 삭제하기")
-        st.write("del 함수를 사용해 리스트의 요소를 삭제할 수 있습니다. 삭제 또한 인덱스를 통해 요소에 접근합니다.")
+        st.write("**del** 함수를 사용해 리스트의 요소를 삭제할 수 있습니다. 삭제 또한 인덱스를 통해 요소에 접근합니다.")
         st.code('''
                 a = [1, 2, 3]
                 del a[1]
 
                 print(a)
                 #출력 : [1, 3]
-                ''')
+                ''',line_numbers=True)
         st.write("다음처럼 슬라이싱 기법을 사용하여 리스트의 요소 여러 개를 한꺼번에 삭제할 수도 있습니다.")
         st.code('''
                 a = [1, 2, 3, 4, 5]
@@ -565,7 +594,7 @@ start는 시작 인덱스, end는 끝 인덱스, step은 슬라이싱 간격을 
 
                 print(a)
                 #출력 : [1, 2]
-                ''')
+                ''',line_numbers=True)
         st.divider()
         st.subheader(f"{idx.getSubIdx()}리스트 관련 함수")
         st.write('''
@@ -574,15 +603,15 @@ start는 시작 인덱스, end는 끝 인덱스, step은 슬라이싱 간격을 
         st.code('''
                 a = [1, 2, 3]
                 a.append(4)
-                print( a )   #리스트의 맨 마지막에 4를 추가
+                print(a)   #리스트의 맨 마지막에 4를 추가
                 #출력 : [1, 2, 3, 4]
-                ''')
+                ''',line_numbers=True)
         st.write("리스트 안에는 어떤 자료형도 추가할 수 있습니다.")
         st.code('''
                 a.append([5, 6])
-                print( a )   #리스트에 리스트를 추가
+                print(a)   #리스트에 리스트를 추가
                 #출력 : [1, 2, 3, 4, [5, 6]]
-                ''')
+                ''',line_numbers=True)
         
         st.write('''
                 - **sort()** : 리스트 정렬
@@ -590,16 +619,16 @@ start는 시작 인덱스, end는 끝 인덱스, step은 슬라이싱 간격을 
         st.code('''
                 a = [1, 4, 3, 2]
                 a.sort()
-                print( a )
+                print(a)
                 #출력 : [1, 2, 3, 4]
-                ''')
+                ''',line_numbers=True)
         st.write("문자 역시 알파벳 순서로 정렬할 수 있습니다.")
         st.code('''
                 a = ['a', 'c', 'b']
                 a.sort()
-                print( a )
+                print(a)
                 #출력 : ['a', 'b', 'c']
-                ''')
+                ''',line_numbers=True)
         
         st.write('''
                 - **reverse()** : 리스트 뒤집기
@@ -607,26 +636,26 @@ start는 시작 인덱스, end는 끝 인덱스, step은 슬라이싱 간격을 
         st.code('''
                 a = ['a', 'c', 'b']
                 a.reverse()
-                print( a )
+                print(a)
                 #출력 : ['b', 'c', 'a']
-                ''')
+                ''',line_numbers=True)
         
         st.write('''
                 - **index()** : 인덱스 반환
                  ''')
         st.code('''
                 a = [1, 2, 3]
-                print( a.index(3) )     #3의 위치(인덱스) 리턴
+                print(a.index(3))     #3의 위치(인덱스) 리턴
                 #출력 : 2
 
-                print( a.index(1) )     #1의 위치(인덱스) 리턴
+                print(a.index(1))     #1의 위치(인덱스) 리턴
                 #출력 : 0
 
-                print( a.index(0) )     #0의 위치(인덱스) 리턴 -> 오류
+                print(a.index(0))     #0의 위치(인덱스) 리턴 -> 오류
                 #Traceback (most recent call last):
                 #    File "<stdin>", line 1, in <module>
                 #ValueError: 0 is not in list
-                ''')
+                ''',line_numbers=True)
         st.write("값 0은 a 리스트에 존재하지 않기 때문에 오류가 발생합니다.")
 
         st.write('''
@@ -635,13 +664,13 @@ start는 시작 인덱스, end는 끝 인덱스, step은 슬라이싱 간격을 
         st.code('''
                 a = [1, 2, 3]
                 a.insert(0, 4)      #0번째 자리에 4 삽입
-                print( a )
+                print(a)
                 #출력 : [4, 1, 2, 3]
 
                 a.insert(3, 5)      #3번째 자리에 5 삽입
-                print( a )
+                print(a)
                 #출력 : [4, 1, 2, 5, 3]
-                ''')
+                ''',line_numbers=True)
         st.write("insert(a, b)는 리스트의 a번째 위치에 b를 삽입합니다.")
         
         st.write('''
@@ -650,9 +679,9 @@ start는 시작 인덱스, end는 끝 인덱스, step은 슬라이싱 간격을 
         st.code('''
                 a = [1, 2, 3, 1, 2, 3]
                 a.remove(3)
-                print( a )
+                print(a)
                 #출력 : [1, 2, 1, 2, 3]
-                ''')
+                ''',line_numbers=True)
         st.write("remove(x)는 리스트에서 첫 번째로 나오는 x를 삭제하는 함수입니다. a가 3이라는 값을 2개 가지고 있을 경우, 첫 번째 3만 제거됩니다.")
 
         st.write('''
@@ -660,21 +689,21 @@ start는 시작 인덱스, end는 끝 인덱스, step은 슬라이싱 간격을 
                  ''')
         st.code('''
                 a = [1, 2, 3]
-                print( a.pop() )    #맨 마지막 요소를 리턴하고, 해당 요소 삭제
+                print(a.pop())    #맨 마지막 요소를 리턴하고, 해당 요소 삭제
                 #출력 : 3
 
-                print( a )
+                print(a)
                 #출력 : [1, 2]
-                ''')
+                ''',line_numbers=True)
         st.write("pop()은 리스트의 맨 마지막 요소를 리턴하고 그 요소는 삭제합니다. a리스트에서 3을 끄집어 내고, [1, 2]만 남게 됩니다.")
         st.code('''
                 a = [1, 2, 3]
-                print( a.pop(1) )    #인덱스 1의 요소를 리턴하고, 해당 요소 삭제
+                print(a.pop(1))    #인덱스 1의 요소를 리턴하고, 해당 요소 삭제
                 #출력 : 2
 
-                print( a )
+                print(a)
                 #출력 : [1, 3]
-                ''')
+                ''',line_numbers=True)
         st.write("pop(x)은 리스트의 x번째 요소를 리턴하고 그 요소는 삭제합니다. a리스트에서 a[1]의 값을 끄집어 내고, [1, 3]만 남게 됩니다.")
         
         st.write('''
@@ -682,9 +711,9 @@ start는 시작 인덱스, end는 끝 인덱스, step은 슬라이싱 간격을 
                  ''')
         st.code('''
                 a = [1, 2, 3, 1]
-                print( a.count(1) )    #1이라는 값이 a에 총 2개
+                print(a.count(1))    #1이라는 값이 a에 총 2개
                 #출력 : 2
-                ''')
+                ''',line_numbers=True)
         st.write("count(x)는 리스트 안에 x가 몇 개 있는지 조사하여 그 개수를 리턴하는 함수입니다.")
         
         st.write('''
@@ -693,20 +722,20 @@ start는 시작 인덱스, end는 끝 인덱스, step은 슬라이싱 간격을 
         st.code('''
                 a = [1, 2, 3]
                 a.extend([4, 5])
-                print( a )
+                print(a)
                 #출력 : [1, 2, 3, 4, 5]
 
                 b = [6, 7]
                 a.extend(b)
                 print(a)
                 #출력 : [1, 2, 3, 4, 5, 6, 7]
-                ''')
+                ''',line_numbers=True)
         st.write("extend(x)에서 x에는 리스트만 올 수 있으며 원래의 a 리스트에 x 리스트를 더하게 됩니다.") 
         st.divider()
         
         st.header(f"{idx.getHeadIdx()}튜플")
         st.write('''
-                튜플(Tuple)은 몇 가지 점을 재외하곤 리스트와 거의 비슷하며 리스트와 다른 점은 다름과 같습니다.
+                튜플(Tuple)은 몇 가지 점을 제외하곤 리스트와 거의 비슷하며 리스트와 다른 점은 다음과 같습니다.
                 
                 - 리스트는 [], 튜플은 ()으로 둘러싼다.
                 - 리스트는 요솟값의 생성, 삭제, 수정이 가능하지만, 튜플은 요솟값을 바꿀 수 없다.
@@ -719,7 +748,7 @@ start는 시작 인덱스, end는 끝 인덱스, step은 슬라이싱 간격을 
                 t3 = (1, 2, 3)
                 t4 = 1, 2, 3
                 t5 = ('a', 'b', ('ab', 'cd'))
-                ''')
+                ''',line_numbers=True)
         st.write('''
                 모습은 리스트와 거의 비슷하지만, 튜플에서는 리스트와 다른 2가지 차이점을 찾아볼 수 있습니다. t2 = (1,)처럼 단지 1개의 요소만을 가질 때는 요소 뒤에 쉼표(,)를 반드시 붙여야 한다는 것과 t4 = 1, 2, 3처럼 소괄호()를 생략해도 된다는 점입니다.
                  ''')
@@ -735,7 +764,7 @@ start는 시작 인덱스, end는 끝 인덱스, step은 슬라이싱 간격을 
 
                 print(t1[3])
                 # 출력 : 'b'
-                ''')
+                ''',line_numbers=True)
         st.divider()
 
         st.subheader(f"{idx.getSubIdx()}튜플의 슬라이싱")
@@ -744,7 +773,7 @@ start는 시작 인덱스, end는 끝 인덱스, step은 슬라이싱 간격을 
 
                 print(t1[1:])
                 # 출력 : (2, 'a', 'b')
-                ''')
+                ''',line_numbers=True)
         st.divider()
 
         st.subheader(f"{idx.getSubIdx()}튜플 길이 구하기")
@@ -752,12 +781,12 @@ start는 시작 인덱스, end는 끝 인덱스, step은 슬라이싱 간격을 
                 t1 = (1, 2, 'a', 'b')
                 print(len(t1))
                 #출력 : 4
-                ''')   
+                ''',line_numbers=True)
         st.divider()
         
         st.header(f"{idx.getHeadIdx()}딕셔너리")
         st.write('''
-                딕셔너리(dictionary)란 단어 그대로 '사전'이라는 뜻입니다. 딕셔너리의 기본 구조는 아래와 같이 Key와 Value를 한 쌍으로 가지며, 리스트나 튜플처럼 순차적으로 해당 요솟값을 구하지 않고 Key를 통해 Value를 얻는 특징을 가집니다.
+                딕셔너리(dictionary)란 단어 그대로 '사전'이라는 뜻입니다. 딕셔너리의 기본 구조는 아래와 같이 **Key**와 **Value**를 한 쌍으로 가지며, 리스트나 튜플처럼 순차적으로 해당 요솟값을 구하지 않고 Key를 통해 Value를 얻는 특징을 가집니다.
         
                     {Key1: Value1, Key2: Value2, Key3: Value3, ...}
                 
@@ -780,7 +809,7 @@ start는 시작 인덱스, end는 끝 인덱스, step은 슬라이싱 간격을 
                     "age" : 30,
                     "city" : "New York"
                 }
-                ''')
+                ''',line_numbers=True)
         
         st.write("딕셔너리는 Key - Value 로 이루어진 데이터 타입이기 때문에 리스트와 같이 인덱스를 사용해서 요소에 접근할 수 없습니다. 딕셔너리의 특정 요소에 접근하기 위해선 지정된 '키' 값을 이용해야 합니다.")
         st.code('''
@@ -790,7 +819,7 @@ start는 시작 인덱스, end는 끝 인덱스, step은 슬라이싱 간격을 
 
                 print(person["age"])
                 #출력 : 30
-                ''')
+                ''',line_numbers=True)
         st.divider()
         st.subheader(f"{idx.getSubIdx()}딕셔너리 쌍 추가, 삭제하기")
         st.code('''
@@ -803,7 +832,7 @@ start는 시작 인덱스, end는 끝 인덱스, step은 슬라이싱 간격을 
                 del person["city"]
                 print(person)
                 #출력 : {'name': 'Alice', 'age': 30, 'job': 'Chef'}
-                ''')
+                ''',line_numbers=True)
         st.divider()
 
         st.subheader(f"{idx.getSubIdx()}딕셔너리 관련 함수")
@@ -813,7 +842,7 @@ start는 시작 인덱스, end는 끝 인덱스, step은 슬라이싱 간격을 
         st.code('''
                 print(person.keys())
                 #출력 : dict_keys(['name', 'age', 'job'])
-                ''')
+                ''',line_numbers=True)
         
         st.write('''
                 - **values()** : Value 리스트 만들기
@@ -821,7 +850,7 @@ start는 시작 인덱스, end는 끝 인덱스, step은 슬라이싱 간격을 
         st.code('''
                 print(person.values())
                 #출력 : dict_values(['Alice', 30, 'Chef'])
-                ''')
+                ''',line_numbers=True)
         
         st.write('''
                 - **items()** : Key, Value 쌍 얻기
@@ -829,7 +858,7 @@ start는 시작 인덱스, end는 끝 인덱스, step은 슬라이싱 간격을 
         st.code('''
                 print(person.items())
                 #출력 : dict_items([('name', 'Alice'), ('age', 30), ('job', 'Chef')])
-                ''')
+                ''',line_numbers=True)
         
         st.write('''
                 - **get()** : Key로 Value 얻기
@@ -837,7 +866,7 @@ start는 시작 인덱스, end는 끝 인덱스, step은 슬라이싱 간격을 
         st.code('''
                 print(person.get("name"))
                 #출력 : Alice
-                ''')
+                ''',line_numbers=True)
         
         st.write('''
                 - **in()** : 해당 Key가 딕셔너리 안에 있는지 조사하기
@@ -848,14 +877,14 @@ start는 시작 인덱스, end는 끝 인덱스, step은 슬라이싱 간격을 
 
                 print("birth" in person)
                 #출력 : False
-                ''')
+                ''',line_numbers=True)
         st.write('''
                 - **clear()** : Key: Value 쌍 모두 지우기
                  ''')
         st.code('''
                 print(person.clear())
                 #출력 : None
-                ''')
+                ''',line_numbers=True)
         st.divider()
         
         st.header(f"{idx.getHeadIdx()}집합")
@@ -867,60 +896,62 @@ start는 시작 인덱스, end는 끝 인덱스, step은 슬라이싱 간격을 
                 s2 = set("Hello")
                 print(s2)
                 # 출력 : {'e', 'H', 'l', 'o'}
-                ''')
+                ''',line_numbers=True)
         st.write('''
                 's2 = set("Hello")' 결과에서 확인할 수 있듯, set에는 다음과 같은 2가지 특징이 있습니다.
                  
                  - 중복을 허용하지 않는다.
                  - 순서가 없다(Unordered).
 
-                 set은 중복을 허용하지 않는 특징 때문에 데이터의 중복을 제거하기 위한 필터로 종종 사용됩니다. 또한, 리스트나 튜플은 순서가 있기(ordered) 때문에 인덱싱을 통해 요솟값을 얻을 수 있지만, set 자료형은 순서가 없기(unordered) 때문에 인덱싱을 통해 요솟값을 얻을 수 없습니다.
+                 set은 중복을 허용하지 않는 특징 때문에 데이터의 중복을 제거하기 위한 필터로 종종 사용됩니다. 또한, 리스트나 튜플은 순서가 있기 때문에 인덱싱을 통해 요솟값을 얻을 수 있지만, set 자료형은 순서가 없기 때문에 인덱싱을 통해 요솟값을 얻을 수 없습니다.
                  ''')
+        st.divider()
+
         st.subheader(f"{idx.getSubIdx()}집합의 연산")
         st.code('''
                 # 연산에 사용할 2개의 set 생성
                 s1 = set([1, 2, 3, 4, 5, 6])
                 s2 = set([4, 5, 6, 7, 8, 9])
-                ''')
+                ''',line_numbers=True)
         
         st.write('''
                 - **교집합** : & , intersection
                  ''')
         st.code('''
-                print( s1 & s2 )
+                print(s1 & s2)
                 #출력 : {4, 5, 6}
 
-                print( s1.intersection(s2) )
+                print(s1.intersection(s2))
                 #출력 : {4, 5, 6}
-                ''')
+                ''',line_numbers=True)
         
         st.write('''
                 - **합집합** : | , union
                  ''')
         st.code('''
-                print( s1 | s2 )
+                print(s1 | s2)
                 #출력 : {1, 2, 3, 4, 5, 6, 7, 8, 9}
 
-                print( s1.union(s2) )
+                print(s1.union(s2))
                 #출력 : {1, 2, 3, 4, 5, 6, 7, 8, 9}
-                ''')
+                ''',line_numbers=True)
         
         st.write('''
                 - **차집합** : -(빼기), difference
                  ''')
         st.code('''
-                print( s1 - s2 )
+                print(s1 - s2)
                 #출력 : {1, 2, 3}
 
-                print( s2 - s1 )
+                print(s2 - s1)
                 #출력 : {8, 9, 7}
 
-                print( s1.difference(s2) )
+                print(s1.difference(s2))
                 #출력 : {1, 2, 3}
 
-                print( s2.difference(s1) )
+                print(s2.difference(s1))
                 #출력 : {8, 9, 7}
-                ''')
+                ''',line_numbers=True)
         st.divider()
 
         st.subheader(f"{idx.getSubIdx()}집합 관련 함수")
@@ -931,9 +962,9 @@ start는 시작 인덱스, end는 끝 인덱스, step은 슬라이싱 간격을 
                 s1 = set([1, 2, 3])
                 s1.add(4)
                 
-                print( s1 )
+                print(s1)
                 #출력 : {1, 2, 3, 4}
-                ''')
+                ''',line_numbers=True)
         
         st.write('''
                 - **update()** : 값 여러 개 추가하기
@@ -942,9 +973,9 @@ start는 시작 인덱스, end는 끝 인덱스, step은 슬라이싱 간격을 
                 s1 = set([1, 2, 3])
                 s1.update([4, 5, 6])
                 
-                print( s1 )
+                print(s1)
                 #출력 : {1, 2, 3, 4, 5, 6}
-                ''')
+                ''',line_numbers=True)
         
         st.write('''
                 - **remove()** : 특정 값 제거하기
@@ -953,43 +984,50 @@ start는 시작 인덱스, end는 끝 인덱스, step은 슬라이싱 간격을 
                 s1 = set([1, 2, 3])
                 s1.remove(2)
                 
-                print( s1 )
+                print(s1)
                 #출력 : {1, 3}
-                ''')
-    ################################################################################################################################################################################
+                ''',line_numbers=True)
+        st.divider()
+    
     elif path == ("파이썬 기초", "제어문") :
         st.header(f"{idx.getHeadIdx()}if문")
         st.subheader(f"{idx.getSubIdx()}if문 기본 구조")
         st.write('''
                 - **if** : 조건이 True인 경우에만 실행
-                 
-                        if 조건:
-                            조건이 True면 수행할 문장
-                 
+                ''')
+        st.code('''
+                if 조건:
+                    조건이 True면 수행할 문장
+                ''', language="text")
+        
+        st.write('''
                 - **if - else** : 조건이 True라면 if 실행문을, False라면 else 실행문을 실행
-                 
-                        if 조건:
-                            조건이 True면 수행할 문장
+                ''')
+        st.code('''
+                if 조건:
+                    조건이 True면 수행할 문장
                             ...
-                        else:
-                            조건이 False면 수행할 문장
-                            ...
+                else:
+                    조건이 False면 수행할 문장
+                ''', language="text")
+        
+        st.write('''
                 - **if - elif - else** : 여러 개의 조건을 사용하는 경우. 조건문이 True가 되는 if 혹은 elif 문을 실행하고, 모든 조건문이 False라면 else 실행문을 실행.
-                 
-                        if 조건1:
-                            조건1이 True면 수행할 문장
+                ''')
+        st.code('''
+                if 조건1:
+                    조건1이 True면 수행할 문장
                             ...
-                        elif 조건2:
-                            조건2이 True면 수행할 문장
+                elif 조건2:
+                    조건2이 True면 수행할 문장
 
-                        elif 조건3:
-                            조건3이 True면 수행할 문장
+                elif 조건3:
+                    조건3이 True면 수행할 문장
                         
-                        else:
-                            모든 조건이 False면 수행할 문장
+                else:
+                    모든 조건이 False면 수행할 문장
                             ...
-
-                 ''')
+                ''', language="text")
         st.divider()
         st.subheader(f"{idx.getSubIdx()}조건문 유형 - 비교 연산자")
         st.write('''
@@ -1030,7 +1068,7 @@ start는 시작 인덱스, end는 끝 인덱스, step은 슬라이싱 간격을 
                 else :
                     print("str1과 str2는 같지 않다")
                 #출력 : str1과 str2는 같지 않다
-                ''')
+                ''',line_numbers=True)
         st.divider()
         st.subheader(f"{idx.getSubIdx()}조건문 유형 - and, or, not")
         st.write('''
@@ -1064,7 +1102,7 @@ start는 시작 인덱스, end는 끝 인덱스, step은 슬라이싱 간격을 
                     print("False")
                 #출력 : True
 
-                ''')
+                ''',line_numbers=True)
         st.divider()
 
         st.subheader(f"{idx.getSubIdx()}조건문 유형 - in, not in")
@@ -1089,7 +1127,7 @@ start는 시작 인덱스, end는 끝 인덱스, step은 슬라이싱 간격을 
                 else :
                     print("False")
                 #출력 : True
-                ''')
+                ''',line_numbers=True)
         st.divider()
         
         st.header(f"{idx.getHeadIdx()}while문")
@@ -1099,14 +1137,14 @@ start는 시작 인덱스, end는 끝 인덱스, step은 슬라이싱 간격을 
         st.subheader(f"{idx.getSubIdx()}while문의 기본 구조")
         st.write('''
                 while 문은 조건문이 참인 동안 while 문에 속한 문장들을 반복해서 수행하고, 조건문이 거짓이 되는 경우 반복을 중지합니다.
-                        
-                    while 조건문:
-                        수행할_문장1
-                        수행할_문장2
-                        수행할_문장3
+                ''')
+        st.code('''
+                while 조건문:
+                    수행할_문장1
+                    수행할_문장2
+                    수행할_문장3
                         ...
-
-                 ''')
+                ''', language="text")
         st.write("아래 코드는 1부터 10까지 더해주는 코드를 반복문으로 작성한 예시입니다. ")
         st.code('''
                 i = 1
@@ -1118,17 +1156,17 @@ start는 시작 인덱스, end는 끝 인덱스, step은 슬라이싱 간격을 
                 
                 print(sum)
                 # 출력 : 55
-                ''')
+                ''',line_numbers=True)
         st.divider()
-
+        
         st.subheader(f"{idx.getSubIdx()}while 문 강제로 빠져나가기")
-        st.write("while 문은 조건문이 참인 동안 계속 while 문 안의 내용을 반복적으로 수행합니다. 하지만 강제로 while 문을 빠져나가고 싶은 경우엔 break를 사용해 반복문을 빠져나갈 수 있습니다.")
+        st.write("while 문은 조건문이 참인 동안 계속 while 문 안의 내용을 반복적으로 수행합니다. 하지만 강제로 while 문을 빠져나가고 싶은 경우엔 **break**를 사용해 반복문을 빠져나갈 수 있습니다.")
         st.write("아래 코드는 조건문이 True이기 때문에 무한 반복하게 됩니다.")
         st.code('''
                 a = 30
                 while True : #무한 반복
                     a -= 5
-                ''')
+                ''',line_numbers=True)
         st.write("while문을 강제로 빠져나오기 위해, 특정 조건을 만족할 경우 break를 사용하여 while문을 빠져나올 수 있습니다.")
         st.code('''
                 a = 30
@@ -1140,10 +1178,10 @@ start는 시작 인덱스, end는 끝 인덱스, step은 슬라이싱 간격을 
                         break
                 print(a)
                 # 출력 : 5
-                ''')
+                ''',line_numbers=True)
         st.divider()
         st.subheader(f"{idx.getSubIdx()}while 문의 맨 처음으로 돌아가기")
-        st.write("while 문 안의 문장을 수행할 때 입력 조건을 검사해서 조건에 맞지 않으면 while 문을 빠져나갑니다. 그런데 프로그래밍을 하다 보면 while 문을 빠져나가지 않고 while 문의 맨 처음(조건문)으로 다시 돌아가게 만들고 싶은 경우가 생기게 되는데, 이때 사용하는 것이 바로 continue 문입니다.")
+        st.write("while 문 안의 문장을 수행할 때 입력 조건을 검사해서 조건에 맞지 않으면 while 문을 빠져나갑니다. 그런데 프로그래밍을 하다 보면 while 문을 빠져나가지 않고 while 문의 맨 처음(조건문)으로 다시 돌아가게 만들고 싶은 경우가 생기게 되는데, 이때 사용하는 것이 바로 **continue** 문입니다.")
         st.code('''
                 a = 0
                 while a < 10 :
@@ -1159,21 +1197,39 @@ start는 시작 인덱스, end는 끝 인덱스, step은 슬라이싱 간격을 
                 #5
                 #7
                 #9
-                ''')
-        st.write("위는 1부터 10까지의 숫자 중 홀수만 출력하는 예시입니다. a가 10보다 작은 동안 a는 1만큼씩 계속 증가합니다. a % 2 == 0(a를 2로 나누었을 때 나머지가 0인 경우)이 참이 되는 경우는 a가 짝수인 경우입니다. 즉, a가 짝수이면 continue 문을 수행하게 됩니다. 이 continue 문은 while 문의 맨 처음인 조건문(a < 10)으로 돌아가게 하는 명령어입니다. 따라서 위 예에서 a가 짝수이면 print(a) 문장은 수행되지 않을 것입니다.")
+                ''',line_numbers=True)
+        st.write("위는 1부터 10까지의 숫자 중 홀수만 출력하는 예시입니다. a가 10보다 작은 동안 a는 1만큼씩 계속 증가합니다. a % 2 == 0(a를 2로 나누었을 때 나머지가 0인 경우)이 참이 되는 경우는 a가 짝수인 경우입니다. 즉, a가 짝수이면 continue 문을 수행하게 됩니다. 이 continue 문은 while 문의 맨 처음인 조건문(a < 10)으로 돌아가게 하는 명령어입니다. 따라서 위 예에서 a가 짝수이면 print(a) 문장은 수행되지 않습니다.")
+        st.divider()
+
+        st.subheader(f"{idx.getSubIdx()}while 문 리스트와 함께 사용하기")
+        st.write('''while 문의 조건문에는 수식이 아닌 리스트 자료형이 올 수 있습니다. 리스트의 경우 값이 비어 있으면([]) 거짓(False)이 되고 비어 있지 않으면 참(True)이 되기 때문입니다.''')
+        st.code('''
+                li = ["A", "B", "C", "D"]
+
+                while li :
+                    print(li.pop())
+                
+                #출력
+                # D
+                # C
+                # B
+                # A
+                ''',line_numbers=True)
+        st.write("**pop()** 함수는 리스트 요소의 마지막 값을 제거하고 반환합니다. 위 코드의 경우, 주어진 리스트의 값이 빌 때까지 마지막 값을 제거하는 반복문을 수행합니다.")
         st.divider()
         
         st.header(f"{idx.getHeadIdx()}for문")
         st.write('''
                  for문은 정해진 횟수나 범위 안에서 차례대로 대입하며 반복을 수행하는 반복문입니다. 아래와 같은 기본 구조를 가집니다.
-                 
-                        for 변수 in 리스트(또는 튜플, 문자열):
-                            수행할_문장1
-                            수행할_문장2
+                ''')
+        st.code('''
+                for 변수 in 리스트(또는 튜플, 문자열):
+                    수행할_문장1
+                    수행할_문장2
                             ...
-
+                ''', language="text")        
+        st.write('''
                 리스트나 튜플, 문자열의 첫 번째 요소부터 마지막 요소까지 차례로 변수에 대입되어 for문 내 문장들이 수행됩니다.
-
                  ''')
         st.divider()
         st.subheader(f"{idx.getSubIdx()}for문 사용법")
@@ -1187,13 +1243,13 @@ start는 시작 인덱스, end는 끝 인덱스, step은 슬라이싱 간격을 
                 #one
                 #two
                 #three
-                ''')
+                ''',line_numbers=True)
         st.write("['one', 'two', 'three'] 리스트의 첫 번째 요소인 'one'이 먼저 i 변수에 대입된 후 print(i) 문장을 수행합니다. 다음에 두 번째 요소 'two'가 i 변수에 대입된 후 print(i) 문장을 수행하고 리스트의 마지막 요소까지 이것을 반복합니다.")
         st.divider()
 
         st.subheader(f"{idx.getSubIdx()}for문과 continue문")
         st.write('''
-                while 문에서 살펴본 continue 문을 for 문에서도 사용할 수 있습니다. 즉, for 문 안의 문장을 수행하는 도중 continue 문을 만나면 for 문의 처음으로 돌아가게 됩니다.
+                while 문에서 살펴본 continue 문을 for 문에서도 사용할 수 있습니다. 즉, for 문 안의 문장을 수행하는 도중 **continue** 문을 만나면 for 문의 처음으로 돌아가게 됩니다.
                  ''')
         st.code('''
                 for i in [10, 23, 17, 22, 12] :
@@ -1204,30 +1260,67 @@ start는 시작 인덱스, end는 끝 인덱스, step은 슬라이싱 간격을 
                 #출력 :
                 # 23
                 # 17
-                ''')
+                ''',line_numbers=True)
         
         st.write("i의 값이 짝수인 경우 continue문이 수행되어 출력이 수행되지 않습니다.")
         st.divider()
 
         st.subheader(f"{idx.getSubIdx()}for문과 함께 자주 사용하는 range 함수")
-        st.write("for 문은 숫자 리스트를 자동으로 만들어 주는 range 함수와 함께 사용하는 경우가 많습니다. 다음은 range 함수의 간단한 사용법입니다.")
+        st.write("for 문은 숫자 리스트를 자동으로 만들어 주는 **range** 함수와 함께 사용하는 경우가 많습니다. 다음은 range 함수의 간단한 사용법입니다.")
         st.code('''
                 a = range(10)
 
                 print(a)
                 # 출력 : range(0, 10)
-                ''')
+                ''',line_numbers=True)
         st.write("range(10)은 0부터 10 미만의 숫자를 포함하는 range 객체를 만들어 줍니다. 시작 숫자와 끝 숫자를 지정하려면 range(시작_숫자, 끝_숫자) 형태를 사용하는데, 이때 끝 숫자는 포함되지 않습니다.")
         st.code('''
-                add = 0
-
                 for i in range(1, 11) :
-                    add += i
+                    print(i)
                 
-                print(add)
-                # 출력 : 55
-                ''')
-        st.write("range(1, 11)은 숫자 1부터 10까지(1 이상 11 미만)의 숫자를 데이터로 가지는 객체입니다. 따라서 위 예에서 i 변수에 숫자가 1부터 10까지 하나씩 차례로 대입되면서 add += i 문장을 반복적으로 수행하고 add 최종적으로 55가 됩니다.")
+                # 출력
+                # 1
+                # 2
+                # 3
+                # 4
+                # 5
+                # 6
+                # 7
+                # 8
+                # 9
+                # 10
+                ''',line_numbers=True)
+        st.divider()
+        st.subheader(f"{idx.getSubIdx()}for문과 함께 자주 사용하는 enumerate 함수")
+        st.write("for 문 사용 시 몇 번째 반복문인지 확인이 필요할 경우가 있습니다. 이때 **enumerate** 함수를 사용해 인덱스 번호와 리스트의 값을 함께 반환할 수 있습니다.")
+        st.code('''
+                num = ["zero", "one", "two", "three", "four", "five"]
+
+                for idx, n in enumerate(num) :
+                        print(idx, n)
+                # 출력
+                # 0 zero
+                # 1 one
+                # 2 two
+                # 3 three
+                # 4 four
+                # 5 five
+                ''',line_numbers=True)
+        st.write("start 인자를 사용해 인덱스를 0이 아닌 다른 숫자로 시작할 수 있습니다.")
+        st.code('''
+                letter = ["A", "B", "C", "D", "E"]
+
+                for idx, l in enumerate(letter, start=5) :
+                        print(idx, l)
+                # 출력
+                # 5 A
+                # 6 B
+                # 7 C
+                # 8 D
+                # 9 E
+                ''',line_numbers=True)
+        
+        
     
     elif path == ("파이썬 기초", "고급") :
         st.header(f"{idx.getHeadIdx()}함수")
@@ -1235,14 +1328,14 @@ start는 시작 인덱스, end는 끝 인덱스, step은 슬라이싱 간격을 
         st.divider()
 
         st.subheader(f"{idx.getSubIdx()}함수의 구조")
-        st.write('''def는 함수를 만들 때 사용하는 예약어이며, 함수 이름은 함수를 만드는 사람이 임의로 만들 수 있습니다. 함수 이름 뒤 괄호 안의 매개변수는 이 함수에 입력으로 전달되는 값을 받는 변수입니다. 이렇게 함수를 정의한 후 if, while, for 문 등과 마찬가지로 함수에서 수행할 문장을 입력합니다.''')
+        st.write('''**def**는 함수를 만들 때 사용하는 예약어이며, 함수 이름은 함수를 만드는 사람이 임의로 만들 수 있습니다. 함수 이름 뒤 괄호 안의 매개변수는 이 함수에 입력으로 전달되는 값을 받는 변수입니다. 이렇게 함수를 정의한 후 if, while, for 문 등과 마찬가지로 함수에서 수행할 문장을 입력합니다.''')
         st.code('''
                 def 함수명(매개변수):
                     수행할_문장1
                     수행할_문장2
                     ...
                     return 결과값
-                 ''')
+                 ''',language="text", line_numbers=True)
         
         st.write("다음의 함수명은 add이고 입력으로 a, b 2개의 값을 받으며 리턴값(출력값)은 2개의 입력값을 더한 값입니다.")
         st.code('''
@@ -1255,21 +1348,22 @@ start는 시작 인덱스, end는 끝 인덱스, step은 슬라이싱 간격을 
 
                 print(z)
                 #출력 : 17
-                ''')
+                ''',line_numbers=True)
         st.divider()
 
         st.subheader(f"{idx.getSubIdx()}매개변수와 인수")
-        st.write("매개변수는 함수에 입력으로 전달된 값을 받는 변수, 인수는 함수를 호출할 때 전달하는 입력값을 의미합니다.")
+        st.write("**매개변수**는 함수에 입력으로 전달된 값을 받는 변수, **인수**는 함수를 호출할 때 전달하는 입력값을 의미합니다.")
 
         st.code('''
                 def add(a, b):  # a, b는 매개변수
                     return a+b
 
                 print(add(3, 4))  # 3, 4는 인수
-                ''')
+                #출력 : 7
+                ''',line_numbers=True)
         st.divider()
         st.subheader(f"{idx.getSubIdx()}return(반환값)")
-        st.write("함수는 들어온 입력값을 받은 후 처리를 하여 적절한 값을 리턴해 줍니다. 함수의 형태는 입력값과 리턴값의 존재 유무에 딸 4가지 유형으로 나뉩니다.")
+        st.write("함수는 들어온 입력값을 받은 후 처리를 하여 적절한 값을 리턴해 줍니다. 함수의 형태는 입력값과 리턴값의 존재 유무에 따라 4가지 유형으로 나뉩니다.")
         st.write('''
                 - 입력값과 리턴값이 모두 있는 일반적인 함수
                  ''')
@@ -1280,7 +1374,7 @@ start는 시작 인덱스, end는 끝 인덱스, step은 슬라이싱 간격을 
 
                 print(add(3, 4))
                 # 출력 : 7
-                ''')
+                ''',line_numbers=True)
         st.write('''
                 - 입력값이 없는 함수
                  ''')
@@ -1290,7 +1384,7 @@ start는 시작 인덱스, end는 끝 인덱스, step은 슬라이싱 간격을 
 
                 print(say())
                 # 출력 : Hi
-                ''')
+                ''',line_numbers=True)
         
         st.write('''
                 - 리턴값이 없는 함수
@@ -1301,7 +1395,7 @@ start는 시작 인덱스, end는 끝 인덱스, step은 슬라이싱 간격을 
 
                 add(3, 4)
                 # 출력 : 3, 4의 합은 7입니다.
-                ''')
+                ''',line_numbers=True)
         st.write('''
                 - 입력값도, 리턴값도 없는 함수
                  ''')
@@ -1311,11 +1405,11 @@ start는 시작 인덱스, end는 끝 인덱스, step은 슬라이싱 간격을 
 
                 say()
                 # 출력 : Hi
-                ''')
+                ''',line_numbers=True)
         st.divider()
         st.subheader(f"{idx.getSubIdx()}lambda")
         st.write('''
-                 lambda는 함수를 생성할 때 사용하는 예약어로, def와 동일한 역할을 합니다. 보통 함수를 한 줄로 간결하게 만들 때 사용합니다. def를 사용해야 할 정도로 복잡하지 않거나 def를 사용할 수 없는 곳에 주로 사용됩니다.
+                 **lambda**는 함수를 생성할 때 사용하는 예약어로, def와 동일한 역할을 합니다. 보통 함수를 한 줄로 간결하게 만들 때 사용합니다. def를 사용해야 할 정도로 복잡하지 않거나 def를 사용할 수 없는 곳에 주로 사용됩니다.
                  
                         함수_이름 = lambda 매개변수1, 매개변수2, ... : 매개변수를_이용한_표현식
                  
@@ -1326,14 +1420,14 @@ start는 시작 인덱스, end는 끝 인덱스, step은 슬라이싱 간격을 
 
                 print(result)
                 #출력 : 7
-                ''')
+                ''',line_numbers=True)
         st.write("add는 2개의 인수를 받아 서로 더한 값을 리턴하는 lambda 함수입니다. lambda로 만든 함수는 return 명령어가 없어도 표현식의 결과값을 리턴합니다.")
         st.divider()
 
         st.header(f"{idx.getHeadIdx()}패키지")
         st.write('''
                 패키지는 모듈의 집합을 뜻합니다. 모듈은 하나의 .py 파이썬 파일, 패키지는 여러개의 .py 파일을 모아놓은 폴더 개념으로 생각할 수 있습니다.
-                파이썬 패키지 중 예로는 넘파이 (NumPy)와 Pandas (판다스)가 있습니다.
+                파이썬 패키지 중 예로는 넘파이(NumPy)와 Pandas(판다스)가 있습니다.
                 ''')
         st.divider()
 
@@ -1342,19 +1436,249 @@ start는 시작 인덱스, end는 끝 인덱스, step은 슬라이싱 간격을 
                  일부 패키지는 파이썬을 설치할 때 함께 설치됩니다. 그러나 그 외에 추가로 패키지를 더 사용해야 할 때는 사용자가 수동으로 설치해야 합니다.
                  파이썬은 간단한 명령어만으로 패키지를 쉽게 내려받아 설치할 수 있습니다.
 
-                        pip install 패키지이름
+                 **윈도우키**+**R** 또는 **윈도우 검색창**에서 **CMD**(명령 프롬프트)를 검색하여 CMD 창을 열고 아래 :blue-background[pip install] 명령을 통해 패키지 설치를 진행합니다.
+
+                        $ pip install 패키지이름
                  
-                예를 들어 pandas 패키지를 설치하려면 :blue-background[pip install pandas] 명령을 통해 설치할 수 있습니다.
+                예를 들어 pandas 패키지의 경우 :blue-background[pip install pandas] 명령을 통해 설치할 수 있습니다.
                 ''')
         st.divider()
         
         st.subheader(f"{idx.getSubIdx()}pip를 이용하여 설치된 패키지 확인하기")
         st.write('''
-                 :blue-background[pip list] 명령을 통해 설치된 패키지 목록을 볼 수 있습니다.
+                 CMD창에서 :blue-background[pip list] 명령을 통해 설치된 패키지 목록을 볼 수 있습니다.
 
-                        pip list
+                        $ pip list
 
-                ''')
+                ''')    
+        st.divider()
+        st.subheader(f"{idx.getSubIdx()}패키지 호출하기")
+        st.write('''
+                설치한 패키지를 사용하기 위해선 **import**를 통해 호출해 불러와주어야 합니다. **import**문은 코드의 가장 상단에 작성해줍니다.
+
+                                import 패키지명
+                ''')    
+        st.write('''
+                패키지명이 너무 길면 **as**를 사용하여 짧은 패키지 별명을 사용할 수 있습니다.
+                ''')    
+        st.code('''import pandas as pd''')
+        st.divider()
+
+        st.header(f"{idx.getHeadIdx()}NumPy")
+        st.write("**NumPy**는 대규모 다차원 배열과 행렬 연산에 필요한 다양한 함수와 메서드를 제공합니다. 데이터 분석, 데이터 처리, 선형 대수, 머신 러닝 등 다양한 분야에서 널리 사용되고 있습니다.")
+
+        st.divider()
+        st.subheader(f"{idx.getSubIdx()}기본 사용법")
+        st.write("CMD 창을 열고 아래 명령어를 사용하여 NumPy 패키지를 설치해 줍니다.")
+        st.code("$ pip install numpy")
+
+        st.write("코드 가장 상단에 **import** 해주어 NumPy를 호출합니다.")
+        st.code("import numpy as np")
+        st.divider()
+
+        st.subheader(f"{idx.getSubIdx()}Array 만들기")
+        st.write("NumPy의 가장 기본적인 데이터 구조는 배열입니다. NumPy 배열은 동일한 타입의 데이터를 담는 다차원 배열입니다.")
+
+        st.code('''
+                # 1차원 배열
+                a = np.array([1, 2, 3])
+
+                print(a) 
+                #출력 : [1 2 3]
+
+                # 2차원 배열
+                b = np.array([[1, 2, 3], [4, 5, 6]])
+
+                print(b)
+                #출력
+                # [[1 2 3]
+                #  [4 5 6]]
+
+                # 3차원 배열
+                c = np.array([[[1, 2], [3, 4]], [[5, 6], [7, 8]]])
+
+                print(c)
+                #출력
+                # [[[1 2]
+                #   [3 4]]
+
+                #  [[5 6]
+                #   [7 8]]]
+                ''',line_numbers=True)
+        
+        st.write("이렇게 생성된 배열의 크기는 **shape** 속성을 통해 확인할 수 있습니다.")
+        st.code('''
+                print(a.shape)  # 출력 : (3,)
+                print(b.shape)  # 출력 : (2, 3)
+                print(c.shape)  # 출력 : (2, 2, 2)
+                ''',line_numbers=True)
+        st.divider()
+
+        st.subheader(f"{idx.getSubIdx()}NumPy 배열 연산")
+        st.write("NumPy 배열은 다른 배열 또는 스칼라와의 연산을 지원합니다. NumPy 배열의 연산은 배열의 **원소별**로 이루어집니다.")
+
+        st.code('''
+                a = np.array([1, 2, 3])
+                b = np.array([4, 5, 6])
+
+                # 원소별 덧셈
+                c = a + b
+                print(c)    # 출력 [5, 7, 9]
+
+                # 원소별 곱셈
+                d = a * b
+                print(d)    # 출력 [4, 10, 18]
+
+                # 스칼라와의 연산
+                e = a + 1  
+                print(e)    # 출력 [2, 3, 4]
+                ''',line_numbers=True)
+        st.write('''- **sum()** : 합계''')
+        st.code('''
+                a = np.array([1, 2, 3])
+
+                # 합계
+                b = np.sum(a)
+                print(b)  # 출력 6
+                ''',line_numbers=True)
+        
+        st.write('''- **mean()** : 평균''')
+        st.code('''
+                a = np.array([1, 2, 3])
+
+                b = np.mean(a)
+                print(b)  # 출력 2.0
+                ''',line_numbers=True)
+        
+        st.write('''- **min()** : 최소값''')
+        st.code('''
+                a = np.array([1, 2, 3])
+
+                b = np.min(a)
+                print(b)  # 출력 1
+                ''',line_numbers=True)
+        
+        st.write('''- **max()** : 최대값''')
+        st.code('''
+                a = np.array([1, 2, 3])
+
+                b = np.max(a)
+                print(b)  # 출력 3
+                ''',line_numbers=True)
+        st.divider()
+        st.subheader(f"{idx.getSubIdx()}Numpy 배열 인덱싱과 슬라이싱")
+        st.write("NumPy 배열의 인덱싱과 슬라이싱은 Python 리스트의 인덱싱과 슬라이싱과 매우 유사합니다. NumPy 배열의 인덱싱과 슬라이싱을 사용하여 배열의 일부를 선택할 수 있습니다.")
+        st.code('''
+                a = np.array([1, 2, 3, 4, 5])
+
+                # 인덱싱
+                b = a[0]
+                print(b)  # 출력 1
+
+                c = a[2]
+                print(c)  # 출력 3
+
+                # 슬라이싱
+                d = a[1:4]
+                print(d)  # 출력 [2, 3, 4]
+
+                e = a[:3]   
+                print(e)  # 출력 [1, 2, 3]
+
+                f = a[3:]   
+                print(f)  # 출력 [4, 5]
+                ''',line_numbers=True)
+        st.write("다차원 NumPy 배열에서는 각 차원의 인덱스를 콤마로 구분하여 인덱싱할 수 있습니다.")
+        st.code('''
+                a = np.array([[1, 2, 3], [4, 5, 6]])
+
+                # 인덱싱
+                b = a[0, 0]  
+                print(b)  # 출력 1
+
+                c = a[1, 2]  
+                print(c)  # 출력 6
+
+                # 슬라이싱
+                d = a[0, 1:3]  
+                print(d)  # 출력 [2, 3]
+
+                e = a[:, 1]    
+                print(e)  # 출력 [2, 5]
+
+                f = a[:, :2]   
+                print(f)  # 출력 [[1, 2], [4, 5]]
+                ''',line_numbers=True)
+        st.divider()
+        st.subheader(f"{idx.getSubIdx()}NumPy 배열 병합과 분리")
+        st.write("**concatenate()** 함수를 사용해 다차원 배열을 병합할 수 있습니다. concatenate() 함수는 병합할 배열을 첫 번째 인자로 전달하며, 두 개 이상의 배열을 병합할 경우에는 튜플 형태로 전달합니다. **axis** 인자를 사용하여 병합할 방향을 지정할 수 있습니다. axis 인자를 지정하지 않을 경우 기본값인 0으로 설정됩니다.")
+        st.code('''
+                a = np.array([1, 2, 3])
+                b = np.array([4, 5, 6])
+
+                # 배열 병합
+                c = np.concatenate((a, b))
+                print(c)  # 출력 [1, 2, 3, 4, 5, 6]
+                ''',line_numbers=True)
+        st.write("**axis=0**은 첫 번째 차원을 따라 배열을 병합한다는 의미입니다. 아래 코드의 경우 a와 b 배열이 첫 번째 차원을 공유하므로 axis=0으로 배열을 병합할 수 있습니다.")
+        st.code('''
+                a = np.array([[1, 2], [3, 4]])
+                b = np.array([[5, 6]])
+
+                # 배열 병합
+                c = np.concatenate((a, b), axis=0)  
+                print(c)    # 출력 [[1, 2], [3, 4], [5, 6]]
+                ''',line_numbers=True)
+        st.write("**split()** 함수를 사용해 다차원 배열을 분리할 수 있습니다. split() 함수는 분리할 배열과 분리할 인덱스를 전달하며, 분리할 인덱스는 분리될 배열의 첫 번째 차원을 따라 지정합니다.")
+        st.code('''
+                a = np.array([1, 2, 3, 4, 5, 6])
+
+                # 배열 분리
+                b, c = np.split(a, [3])  
+                print(b, c)    # 출력 [1, 2, 3], [4, 5, 6])
+                ''',line_numbers=True)
+        st.write("**axis=0**은 첫 번째 차원을 따라 배열을 분리한다는 의미입니다. 아래 코드의 경우 a의 첫 번째 행을 기준으로 배열을 분리합니다.")
+        st.code('''
+                a = np.array([[1, 2, 3], [4, 5, 6]])
+
+                # 배열 분리
+                b, c = np.split(a, [1], axis=0)  
+                print(b, c)    # 출력 [[1, 2, 3]], [[4, 5, 6]]
+                ''',line_numbers=True)
+        st.divider()
+        st.subheader(f"{idx.getSubIdx()}NumPy 관련 함수")
+        st.write("NumPy는 배열의 계산과 관련된 다양한 함수를 제공합니다.")
+
+        st.write('''- **np.zeros()** : 모든 원소가 0인 배열 생성''')
+        st.code('''
+                arr = np.zeros((2, 3))
+                print(arr)    #출력 [[0. 0. 0.] [0. 0. 0.]]    
+                ''',line_numbers=True)
+        st.write('''- **np.ones()** : 모든 원소가 1인 배열 생성''')
+        st.code('''
+                arr = np.ones((2, 2))
+                print(arr)    #출력 [[1. 1.] [1. 1.]]
+                ''',line_numbers=True)
+        st.write('''- **np.arange()** : 범위 내의 일정 간격을 가진 배열 생성''')
+        st.code('''
+                arr = np.arange(1, 10, 2)   #범위가 1에서 10까지이고 간격이 2인 배열
+                print(arr)    #출력 [1 3 5 7 9]               
+                ''',line_numbers=True)
+        st.write('''- **np.linspace()** : 범위 내에서 균등 간격으로 원하는 개수의 배열 생성''')
+        st.code('''
+                arr = np.linspace(0, 1, 5)    #범위가 0에서 1까지이고 원하는 개수가 5개인 배열
+                print(arr)    #출력 [0.   0.25 0.5  0.75 1.  ]            
+                ''',line_numbers=True)
+        st.write('''- **np.random.random()** : 0부터 1사이의 난수를 가지는 배열 생성''')
+        st.code('''
+                arr = np.random.random((2, 2))  #크기 지정(2*2)
+                print(arr)    #출력 [[0.8180057  0.58944475] [0.71871027 0.70529442]]
+                ''',line_numbers=True)
+        st.write('''- **np.random.randn()** : 평균이 0이고 표준편차가 1인 정규 분포를 따르는 난수를 가지는 배열 생성''')
+        st.code('''
+                arr = np.random.randn(2, 2)  #크기 지정(2*4)
+                print(arr)    # 출력 [[-1.09887802  2.13154382] [-0.96512407 -0.37879234]]
+                ''',line_numbers=True)
     
     ### Pandas 컨텐츠 작성
     elif path == ("Pandas 기초", "DataFrame") :
@@ -5103,6 +5427,7 @@ plt.show()'''
         st.pyplot(plt)
         plt.close()
 
+
     elif path == ("실습 프로젝트", "대기오염 데이터 분석"):
         import numpy as np
         import pandas as pd
@@ -5864,19 +6189,18 @@ plt.show()'''
     
         st.write('이러한 시각화 자료를 통해 설득력을 더욱 높일 수 있습니다.')
 
-
-
     elif path == ("실습 프로젝트", "날씨별 공공자전거 수요 분석"):
         st.header(f"{idx.getHeadIdx()}날씨별 공공자전거 수요 분석")
         st.write('''
-                자전거 대여소는 계절과 날씨에 따라 대여 건수의 변동이 심해, 운영 비용에 큰 영향을 미치고 있습니다. 따라서 날씨예보정보를 활용해 대여건수를 사전에 예측하고, 
+                자전거 대여소는 계절과 날씨에 따라 대여 건수의 변동이 심해, 운영 비용에 큰 영향을 미치고 있습니다. 따라서 날씨 예보 정보를 활용해 대여 건수를 사전에 예측하고, 
                  운영 비용을 조정하기 위한 데이터 분석 및 시각화 실습을 진행합니다.
                  ''')
         st.divider()
 
-        st.subheader(f"{idx.getSubIdx()}데이터 불러오기")
-        st.write('- 실습을 위해 **아래의 버튼**을 클릭하여 데이터를 다운로드 해주세요')
-        st.write('해당 파일을 압축 해제해 **실습03** 폴더를 :blue-background[data/실습03/]경로로 이동해주세요.')
+
+        st.subheader(f"{idx.getSubIdx()}데이터 준비")
+        st.write('- 실습을 위해 **아래의 버튼**을 클릭하여 데이터를 다운로드해 주세요')
+        st.write('해당 파일을 압축 해제해 **실습03** 폴더를 :blue-background[data/실습03/]경로로 이동해 주세요.')
         with open('data/실습03.zip', "rb") as template_file:
             template_zip = template_file.read()
 
@@ -5885,156 +6209,230 @@ plt.show()'''
                             data=template_zip,
                            file_name = "실습03.zip"
         )
-        with st.echo():
-            # 필요한 패키지 설치
-            import numpy as np
-            import pandas as pd
-            import seaborn as sns
-            import matplotlib.pyplot as plt
+        st.divider()
 
-            # 기상관측자료 데이터
-            weather_info = pd.read_csv('data/실습03/기상관측자료202306.csv', encoding='cp949')
-            
-            #자전거 이용정보 데이터
-            files = [
-                "data/실습03/공공자전거이용정보0.csv",
-                "data/실습03/공공자전거이용정보1.csv",
-                "data/실습03/공공자전거이용정보2.csv",
-                "data/실습03/공공자전거이용정보3.csv",
-                "data/실습03/공공자전거이용정보4.csv",
-                "data/실습03/공공자전거이용정보5.csv"
-            ]
 
-            #파일 병합
-            bike_info = pd.concat([pd.read_csv(file, encoding='cp949') for file in files], ignore_index=True)
+        st.subheader(f"{idx.getSubIdx()}패키지 설치 및 호출")
+        st.write('''
+                CMD 창을 열고 아래의 패키지들을 설치해 줍니다. 
+                 ''')
+        st.code('''
+                $ pip install numpy
+                ''', language="text")
+        st.code('''
+                $ pip install pandas
+                ''', language="text")
+        st.code('''
+                $ pip install seaborn
+                ''', language="text")
+        st.code('''
+                $ pip install matplotlib
+                ''', language="text")
+        
+        st.write("다시 작업 파일(.ipynb)로 돌아와서, 설치한 패키지들을 호출해 줍니다.")
+        st.code('''
+                import numpy as np
+                import pandas as pd
+                import seaborn as sns
+                import matplotlib.pyplot as plt
+                ''')
+        st.divider()
 
-            weather_info.head()
-            bike_info.head()
 
+        st.subheader(f"{idx.getSubIdx()}데이터 불러오기")
+        st.write("실습에 필요한 데이터를 불러오겠습니다.")
+        st.code('''
+                # 기상관측자료 데이터
+                weather_info = pd.read_csv('data/실습03/기상관측자료202306.csv', encoding='cp949')
+
+                #자전거 이용정보 데이터
+                files = [
+                    "data/실습03/공공자전거이용정보0.csv",
+                    "data/실습03/공공자전거이용정보1.csv",
+                    "data/실습03/공공자전거이용정보2.csv",
+                    "data/실습03/공공자전거이용정보3.csv",
+                    "data/실습03/공공자전거이용정보4.csv",
+                    "data/실습03/공공자전거이용정보5.csv"
+                ]
+
+                #파일 병합
+                bike_info = pd.concat([pd.read_csv(file, encoding='cp949') for file in files], ignore_index=True)
+                ''', line_numbers=True)
+        
+        import numpy as np
+        import pandas as pd
+        import seaborn as sns
+        import matplotlib.pyplot as plt
+        import io
+        # 기상관측자료 데이터
+        weather_info = pd.read_csv('data/실습03/기상관측자료202306.csv', encoding='cp949')
+
+        #자전거 이용정보 데이터
+        files = [
+            "data/실습03/공공자전거이용정보0.csv",
+            "data/실습03/공공자전거이용정보1.csv",
+            "data/실습03/공공자전거이용정보2.csv",
+            "data/실습03/공공자전거이용정보3.csv",
+            "data/실습03/공공자전거이용정보4.csv",
+            "data/실습03/공공자전거이용정보5.csv"
+        ]
+
+        #파일 병합
+        bike_info = pd.concat([pd.read_csv(file, encoding='cp949') for file in files], ignore_index=True)
         st.write("**weather_info**")
-        st.write(weather_info.head())
+        st.code('''weather_info.sample(5)''', line_numbers=True)
+        st.write(weather_info.sample(5))
+        
         st.write("**bike_info**")
-        st.write(bike_info.head())
+        st.code('''bike_info.sample(5)''', line_numbers=True)
+        st.write(bike_info.sample(5))
         st.divider()
         
+
         st.header(f"{idx.getHeadIdx()}공공자전거 데이터 전처리")
         st.subheader(f"{idx.getSubIdx()}집계 데이터 생성")
-        st.write('''날씨 정보와의 결합에 필요한 데이터(**이용건수**)를 생성하기 위해 **대여일자**, **대여시간**으로 집계해줍니다.''')
+        st.write('''날씨 정보와의 결합에 필요한 데이터(**이용건수**)를 생성하기 위해 **대여일자**, **대여시간**으로 집계해 줍니다.''')
         st.code('''
+                #공공자전거 집계 데이터 생성
                 bike_df2 = bike_info.groupby(['대여일자', '대여시간'])['이용건수'].sum()
                 bike_df2 = bike_df2.reset_index() #인덱스 재 정렬 , 기존 인덱스를 열로
-                
-                bike_df2.head()
-                ''')
+
+                bike_df2.sample(5)
+                ''', line_numbers=True)
         bike_df2 = bike_info.groupby(['대여일자', '대여시간'])['이용건수'].sum()
         bike_df2 = bike_df2.reset_index() #인덱스 재 정렬 , 기존 인덱스를 열로
-        st.write(bike_df2.head())
+        st.write(bike_df2.sample(5))
         st.divider()
+
 
         st.subheader(f"{idx.getSubIdx()}파생변수 생성")
         st.write('''대여일자에서 **년도, 월, 일, 요일, 공휴일** 변수를 생성합니다.''')
         st.code('''
+                #공공자전거 파생변수 생성
                 bike_df2['대여일자'] = pd.to_datetime(bike_df2['대여일자'])
                 bike_df2['년도'] = bike_df2['대여일자'].dt.year
                 bike_df2['월'] = bike_df2['대여일자'].dt.month
                 bike_df2['일'] = bike_df2['대여일자'].dt.day
                 bike_df2['요일(num)'] = bike_df2['대여일자'].dt.dayofweek
                 bike_df2['공휴일'] = 0  #0: 평일 1: 공휴일
-                
+
                 # 토요일, 일요일을 공휴일로 설정
                 bike_df2.loc[bike_df2['요일(num)'].isin([5,6]),['공휴일']] = 1
-                bike_df2.sample(10)
-                ''')
+                bike_df2.sample(5)
+                ''',line_numbers=True)
         
         bike_df2['대여일자'] = pd.to_datetime(bike_df2['대여일자'])
         bike_df2['년도'] = bike_df2['대여일자'].dt.year
         bike_df2['월'] = bike_df2['대여일자'].dt.month
         bike_df2['일'] = bike_df2['대여일자'].dt.day
         bike_df2['요일(num)'] = bike_df2['대여일자'].dt.dayofweek
-        bike_df2['공휴일'] = 0 #0: 평일 1: 공휴일
-        
+        bike_df2['공휴일'] = 0  #0: 평일 1: 공휴일
+
         # 토요일, 일요일을 공휴일로 설정
         bike_df2.loc[bike_df2['요일(num)'].isin([5,6]),['공휴일']] = 1
-
-        st.write(bike_df2.sample(10))
+        st.write(bike_df2.sample(5))
         st.divider()
+
 
         st.header(f"{idx.getHeadIdx()}날씨 데이터 전처리")
         st.subheader(f"{idx.getSubIdx()}날짜, 시간 컬럼 생성")
         st.write('''자전거 이용정보와의 결합을 위해 **일시** 칼럼에서 **날짜**와 **시간** 정보를 추출합니다.''')
         st.code('''
+                #날씨 데이터 전처리
                 weather_info['날짜'] = weather_info['일시'].str[:10]
                 weather_info['시간'] = weather_info['일시'].str[11:13].astype(int)
-                ''')
+
+                weather_info.info()
+                ''',line_numbers=True)
         
         weather_info['날짜'] = weather_info['일시'].str[:10]
         weather_info['시간'] = weather_info['일시'].str[11:13].astype(int)
+
+        #weather_info.info() 출력 코드
+        buffer = io.StringIO()
+        weather_info.info(buf=buffer)
+        st.text(buffer.getvalue())
         st.divider()
+
 
         st.subheader(f"{idx.getSubIdx()}컬럼 선택")
         st.write("분석에 사용할 컬럼을 순서대로 가져와서 새 데이터 프레임을 생성합니다.")
         st.code('''
                 weather_df = weather_info[['날짜', '시간', '기온(°C)', '강수량(mm)', '풍속(m/s)', '풍향(16방위)', '습도(%)','일조(hr)','일사(MJ/m2)', '적설(cm)','전운량(10분위)', '지면온도(°C)']]
-                
+
                 #칼럼명 변경
                 weather_df.columns = ['날짜', '시간', '기온', '강수량(mm)', '풍속(m/s)', '풍향(16방위)', '습도(%)','일조','일사', '적설(cm)','전운량',  '지면온도']
-                ''')
+                weather_df.columns
+                ''',line_numbers=True)
+        
         weather_df = weather_info[['날짜', '시간', '기온(°C)', '강수량(mm)', '풍속(m/s)', '풍향(16방위)', '습도(%)','일조(hr)','일사(MJ/m2)', '적설(cm)','전운량(10분위)', '지면온도(°C)']]
+
+        #칼럼명 변경
         weather_df.columns = ['날짜', '시간', '기온', '강수량(mm)', '풍속(m/s)', '풍향(16방위)', '습도(%)','일조','일사', '적설(cm)','전운량',  '지면온도']
+        st.write(weather_df.columns)
         st.divider()
         
+
         st.subheader(f"{idx.getSubIdx()}결측치 확인")
         st.code('''
+                #결측치 확인
                 weather_df.isnull().sum()
-                ''')
+                ''',line_numbers=True)
         st.write(weather_df.isnull().sum())
         st.write('''
-                **강수량, 적설, 일조, 일사**와 같이 NaN값이 0인 경우는 0으로 fill 해줍니다. **전운량, 기온, 지면온도, 풍향, 풍속**은 같은 일자의 이전시간대의 데이터로 대체합니다.
+                **강수량, 적설, 일조, 일사**와 같이 NaN값이 0인 경우는 0으로 fill 해줍니다. **전운량, 기온, 지면온도, 풍향, 풍속**은 같은 일자의 이전 시간대의 데이터로 대체합니다.
                 ''')
         
         st.write('''
                 - NaN 값을 0으로 fill (fillna)
                  ''')
         st.code('''
-                weather_df['강수량(mm)'].fillna(0, inplace = True)
-                weather_df['적설(cm)'].fillna(0, inplace = True)
-                weather_df['일조'].fillna(0, inplace = True)
-                weather_df['일사'].fillna(0, inplace = True)
-                ''')
-        weather_df['강수량(mm)'].fillna(0, inplace = True)
-        weather_df['적설(cm)'].fillna(0, inplace = True)
-        weather_df['일조'].fillna(0, inplace = True)
-        weather_df['일사'].fillna(0, inplace = True)
+                # NaN 값을 0으로 fill (fillna)
+                weather_df.loc[:, '강수량(mm)'] = weather_df['강수량(mm)'].fillna(0)
+                weather_df.loc[:, '적설(cm)'] = weather_df['적설(cm)'].fillna(0)
+                weather_df.loc[:, '일조'] = weather_df['일조'].fillna(0)
+                weather_df.loc[:, '일사'] = weather_df['일사'].fillna(0)
+                ''',line_numbers=True)
+        weather_df.loc[:, '강수량(mm)'] = weather_df['강수량(mm)'].fillna(0)
+        weather_df.loc[:, '적설(cm)'] = weather_df['적설(cm)'].fillna(0)
+        weather_df.loc[:, '일조'] = weather_df['일조'].fillna(0)
+        weather_df.loc[:, '일사'] = weather_df['일사'].fillna(0)
 
         st.write('''
                 - NaN 값을 직전 데이터의 값으로 fill (ffill)
                  ''')
         st.code('''
+                # NaN 값을 직전 데이터의 값으로 fill (ffill)
                 # 날짜 시간으로 정렬
                 weather_df = weather_df.sort_values(['날짜','시간'])
 
                 # 전 값으로 
-                weather_df['기온'].fillna(method='ffill',inplace = True)
-                weather_df['풍속(m/s)'].fillna(method='ffill',inplace = True)
-                weather_df['풍향(16방위)'].fillna(method='ffill',inplace = True)
-                weather_df['전운량'].fillna(method='ffill',inplace = True)
-                weather_df['지면온도'].fillna(method='ffill',inplace = True)
-                ''')
+                weather_df['기온'] = weather_df['기온'].ffill()
+                weather_df['풍속(m/s)']= weather_df['풍속(m/s)'].ffill()
+                weather_df['풍향(16방위)'] = weather_df['풍향(16방위)'].ffill()
+                weather_df['전운량'] = weather_df['전운량'].ffill()
+                weather_df['지면온도'] = weather_df['지면온도'].ffill()
+                ''',line_numbers=True)
         weather_df = weather_df.sort_values(['날짜','시간'])
-        weather_df['기온'].fillna(method='ffill',inplace = True)
-        weather_df['풍속(m/s)'].fillna(method='ffill',inplace = True)
-        weather_df['풍향(16방위)'].fillna(method='ffill',inplace = True)
-        weather_df['전운량'].fillna(method='ffill',inplace = True)
-        weather_df['지면온도'].fillna(method='ffill',inplace = True)
+        weather_df['기온'] = weather_df['기온'].ffill()
+        weather_df['풍속(m/s)']= weather_df['풍속(m/s)'].ffill()
+        weather_df['풍향(16방위)'] = weather_df['풍향(16방위)'].ffill()
+        weather_df['전운량'] = weather_df['전운량'].ffill()
+        weather_df['지면온도'] = weather_df['지면온도'].ffill()
         
         st.write("결측치를 제거한 결과를 확인해보겠습니다.")
-        st.code('''weather_df.isnull().sum()''')
+        st.code('''
+                #결측치 제거 확인
+                weather_df.isnull().sum()
+                ''',line_numbers=True)
         st.write(weather_df.isnull().sum())
         st.divider()
+
 
         st.header(f"{idx.getHeadIdx()}데이터 결합")
         st.write("전처리된 공공자전거 데이터와 날씨 데이터를 결합해 날씨별 자전거 대여 데이터를 만들어보겠습니다.")
         st.code('''
+                #데이터 결합
                 weather_df['날짜'] = pd.to_datetime(weather_df['날짜'])
 
                 #데이터 타입 맞추기 
@@ -6043,78 +6441,94 @@ plt.show()'''
                                     left_on =['대여일자', '대여시간'], 
                                     right_on = ['날짜', '시간']) #default = inner 
                 bike_mg.head()
-                ''')
+                ''',line_numbers=True)
         weather_df['날짜'] = pd.to_datetime(weather_df['날짜'])
-        #데이터 타입 맞추기 
         bike_mg = pd.merge (bike_df2, 
                             weather_df, 
                             left_on =['대여일자', '대여시간'], 
                             right_on = ['날짜', '시간']) #default = inner 
         st.write(bike_mg.head())
 
-        st.write("**대여일자, 날짜, 시간** 데이터가 중복되는 것을 확인할 수 있습니다. 중복되는 데이터를 제거해보겠습니다.")
+        st.write("**대여일자, 날짜, 시간** 데이터가 중복되는 것을 확인할 수 있습니다. 중복되는 데이터를 제거해 보겠습니다.")
         st.code('''
+                #중복데이터 제거
                 bike_mg = bike_mg.drop(['대여일자', '날짜', '시간'], axis = 1)
-                
+
                 bike_mg.head()
-                ''')
+                ''',line_numbers=True)
         bike_mg = bike_mg.drop(['대여일자', '날짜', '시간'], axis = 1)
         st.write(bike_mg.head())
         st.divider()
 
+
         st.header(f"{idx.getHeadIdx()}데이터 시각화")
         st.write("원본 데이터프레임을 보존하기 위해 복사본을 생성한 후 시각화를 진행하겠습니다.")
-        st.code('''data = bike_mg.copy()''')
+        st.code('''
+                #복사본 생성
+                data = bike_mg.copy()
+                ''',line_numbers=True)
         data = bike_mg.copy()
 
-        st.subheader(f"{idx.getSubIdx()}데이터 요약 통계")
-        st.write("데이터의 요약 통계를 확인해 정상적인 값인지 확인해보겠습니다.")
+        st.write("그래프를 그리기에 앞서, 한글 출력을 위한 폰트 설정을 해줍니다.")
         st.code('''
+                #한글 표시
+                plt.rcParams['font.family'] = 'NanumGothic'
+                plt.rc('font', family='NanumGothic')
+                ''', line_numbers=True)
+        st.divider()
+
+
+        st.subheader(f"{idx.getSubIdx()}데이터 요약 통계")
+        st.write("데이터의 요약 통계를 확인해 정상적인 값인지 확인해 보겠습니다.")
+        st.code('''
+                #데이터 요약 통계
                 desc_df = data.describe().T
                 desc_df
-                ''')
+                ''',line_numbers=True)
         desc_df = data.describe().T
         st.write(desc_df)
         st.divider()
 
+
         st.subheader(f"{idx.getSubIdx()}이용건수 분포 시각화")
         st.code('''
-                fig, ax = plt.subplots()
-                sns.histplot(data['이용건수'], ax=ax)
+                sns.histplot(data['이용건수'])
 
                 plt.show()
-                ''')
+                ''',line_numbers=True)
+
         fig, ax = plt.subplots()
         sns.histplot(data['이용건수'], ax=ax)
         ax.set_title("이용건수 분포", fontproperties=prop)
         ax.set_xlabel("이용건수", fontproperties=prop)
         st.pyplot(fig)
         plt.close(fig)
-
         st.code('''
-                fig, ax = plt.subplots()
                 sns.lineplot(x=data['일'], y=data['이용건수'])
 
                 plt.show()
-                ''')
+                ''',line_numbers=True)
         fig, ax = plt.subplots()
-        sns.lineplot(x=data['일'].map(str), y=data['이용건수'], ax=ax)
+        sns.lineplot(x=data['일'], y=data['이용건수'], ax=ax)
         ax.set_xlabel("일", fontproperties=prop)
         ax.set_ylabel("이용 건수", fontproperties=prop)
         st.pyplot(fig)
         plt.close(fig)
         st.divider()
+
         
         st.subheader(f"{idx.getSubIdx()}피처의 분포 시각화")
         st.write("원하는 컬럼을 선택해 피처의 분포를 확인합니다.")
         st.code('''
+                #컬럼 선택
                 con_cols = ["기온", "강수량(mm)", "풍속(m/s)", "습도(%)", "일조"]
-                ''')
+                ''',line_numbers=True)
         con_cols = ["기온", "강수량(mm)", "풍속(m/s)", "습도(%)", "일조"]
         
         
         st.write("선택된 칼럼에 대한 피처의 분포를 시각화합니다.")
         st.code('''
+                #피처의 분포 시각화
                 fig, axes = plt.subplots(1,5, figsize = (20, 4))
                 ax = axes.flatten()
                 
@@ -6123,7 +6537,7 @@ plt.show()'''
                     sns.histplot(data = data, x = col, ax = ax[i])
 
                 plt.show()
-                ''')
+                ''',line_numbers=True)
         
         fig, axes = plt.subplots(1,5, figsize = (20, 4))
         ax = axes.flatten()
@@ -6131,10 +6545,11 @@ plt.show()'''
         for i, col in enumerate(con_cols):
             sns.histplot(data = data, x = col, ax = ax[i])
             ax[i].set_xlabel(col, fontproperties=prop)
+        
         st.pyplot(fig)
         plt.close(fig)
-        st.write("선택된 칼럼에 대한 피처의 분포를 시각화합니다.")
         st.divider()
+
 
         st.subheader(f"{idx.getSubIdx()}이용건수와 피처와의 관계")
         st.write("공공자전거 이용 건수와 피처와의 관계를 시각화합니다.")
@@ -6156,12 +6571,16 @@ plt.show()'''
                 fig.subplots_adjust(hspace = 0.4)
 
                 plt.show()
-                ''')
+                ''',line_numbers=True)
+        
         fig, axes = plt.subplots(2,2, figsize = (20,8))
+                
         sns.barplot(data = data, x = '일', y= '이용건수', ax = axes[0,0])
         sns.barplot(data = data, x = '공휴일', y= '이용건수', ax = axes[0,1])
         sns.lineplot(data = data, x = '기온', y= '이용건수', ax = axes[1,0])
         sns.lineplot(data = data, x = '강수량(mm)', y= '이용건수', ax = axes[1,1])
+
+        #제목 설정 
         axes[0,0].set_title('일별 이용건수', fontproperties=prop)
         axes[0,0].set_xlabel("일", fontproperties=prop)
         axes[0,0].set_ylabel("이용건수", fontproperties=prop)
@@ -6177,7 +6596,9 @@ plt.show()'''
         axes[1,1].set_title('강수량(mm)별 이용건수', fontproperties=prop)
         axes[1,1].set_xlabel("강수량(mm)", fontproperties=prop)
         axes[1,1].set_ylabel("이용건수", fontproperties=prop)
-        fig.subplots_adjust(hspace = 0.4)        
+
+        # 간격조정
+        fig.subplots_adjust(hspace = 0.4)
         st.pyplot(fig)
         plt.close(fig)
         st.write('''
@@ -6185,23 +6606,16 @@ plt.show()'''
                 - 기온이 높을수록 이용건수가 증가하는 경향을 보입니다.
                 - 강수량이 적을수록 이용건수가 높습니다.
                 ''')
-    
         st.divider()
 
+
         st.subheader(f"{idx.getSubIdx()}평일과 공휴일 이용건수 차이")
-        st.write('''평일과 공휴일에는 완전히 다른 이용 현황을 보이는 것을 확인할 수 있습니다.
-                 평일의 경우 오전 8시, 오후 6시에 이용건수 피크를 보이는데, 출퇴근으로 인한 영향으로 추측해볼 수 있겠습니다.
-                 ''')
         st.code('''
-                fig, ax = plt.subplots()
-                plt.figure(figsize = (15,3))
                 sns.pointplot(x='대여시간', y='이용건수',data = data, hue = '공휴일')
             
                 plt.show()
-                ''')
-        
+                ''',line_numbers=True)
         fig, ax = plt.subplots()
-        plt.figure(figsize = (15,3))
         sns.pointplot(x='대여시간', y='이용건수',data = data, hue = '공휴일', ax=ax)
         ax.set_xlabel("대여시간", fontproperties=prop)
         ax.set_ylabel("이용건수", fontproperties=prop)
@@ -6211,55 +6625,55 @@ plt.show()'''
 
         st.pyplot(fig)
         plt.close(fig)
+        st.write('''평일과 공휴일에는 완전히 다른 이용 현황을 보이는 것을 확인할 수 있습니다.
+                 평일의 경우 오전 8시, 오후 6시에 이용건수 피크를 보이는데, 출퇴근으로 인한 영향으로 추측해 볼 수 있겠습니다.
+                 ''')
         st.divider()
 
+
         st.subheader(f"{idx.getSubIdx()}요일에 따른 이용건수 차이")
-        st.write("토요일에 이용건수가 더 많고, 토요일 오후에 전반적으로 이용률이 높은 모습을 보입니다.")
         st.code('''
-                fig, ax = plt.subplots()
-                plt.figure(figsize = (15,3))
-                sns.pointplot(x='대여시간', y='이용건수',data = data, hue = '요일(num)'))
+                sns.pointplot(x='대여시간', y='이용건수',data = data, hue = '요일(num)')
 
                 plt.show()
-                ''')
+                ''',line_numbers=True)
         fig, ax = plt.subplots()
-        plt.figure(figsize = (15,3))
         sns.pointplot(x='대여시간', y='이용건수',data = data, hue = '요일(num)', ax=ax)
         ax.set_xlabel("대여시간", fontproperties=prop)
         ax.set_ylabel("이용건수", fontproperties=prop)
         handles, labels = ax.get_legend_handles_labels()
         ax.legend(handles, labels, title='요일(num)', title_fontproperties=prop, prop=prop)
+       
+
         st.pyplot(fig)
         plt.close(fig)
+        st.write("토요일에 이용건수가 더 많고, 토요일 오후에 전반적으로 이용률이 높은 모습을 보입니다.")
         st.divider()
 
+
         st.subheader(f"{idx.getSubIdx()}요일에 따른 이용건수 차이(box)")
-        st.write("공휴일은 상대적으로 변동성이 적고, 평일은 변동성이 큰 편입니다.")
         st.code('''
-                fig, ax = plt.subplots()
                 sns.boxplot(x='요일(num)', y='이용건수',data = data)
                 dofw = list('월화수목금토일')
                 plt.xticks([0,1,2,3,4,5,6],dofw)
                 
                 plt.show()
-                ''')
+                ''',line_numbers=True)
         fig, ax = plt.subplots()
-        plt.figure(figsize = (15,3))
         sns.boxplot(x='요일(num)', y='이용건수',data = data, ax=ax)
-        # 요일 이름 설정
         dofw = list('월화수목금토일')
-        ax.set_xticks([0, 1, 2, 3, 4, 5, 6])
-        ax.set_xticklabels(dofw, fontproperties=prop)
-
+        plt.xticks([0,1,2,3,4,5,6],dofw, fontproperties=prop)
         ax.set_xlabel("요일(num)", fontproperties=prop)
         ax.set_ylabel("이용건수", fontproperties=prop)
         
         st.pyplot(fig)
         plt.close(fig)
+        st.write("공휴일은 상대적으로 변동성이 적고, 평일은 변동성이 큰 편입니다.")
         st.divider()
         
+        
         st.header(f"{idx.getHeadIdx()}결론 도출")
-        st.subheader(f"{idx.getSubIdx()}시간대 및 공휴일여부에 따른 특성")
+        st.subheader(f"{idx.getSubIdx()}시간대 및 공휴일 여부에 따른 특성")
         st.write('''
                 - 공공자전거 이용이 가장 많은 시간대는 **평일 오후 6시**입니다.
                 - 두 번째로 이용이 많은 시간대는 **평일 오전 8시**입니다.
@@ -6275,19 +6689,28 @@ plt.show()'''
                 - 습도, 풍속, 일조량도 이용건수에 **영향**을 미치는 것으로 보입니다.
                 ''')
         st.divider()
+        st.divider()
         
     else :
         st.error("Content Not Found !")
 
-    st.button("돌아가기", on_click=update_session_state, args=('go_back',))
+def goback_btn() :
+    button_container = st.container()
+    with button_container:
+         st.button("돌아가기", on_click=update_session_state, args=('go_back',), type="primary")
+    button_container.float(float_css_helper(width="2.2rem", right="5rem",bottom="1rem"))
 
 def main() :
+    float_init()
     page, topic, chapter = init_session_state()
-    
+    user_ip = get_ip()
+
     if page == 'page_topic':
         show_topic(topic)
     elif page == 'page_chapter':
+        goback_btn()
         show_chapter(topic, chapter)
+        
     
     with st.sidebar:
         option_menu(
@@ -6302,6 +6725,16 @@ def main() :
                 "nav-link-selected": {"background-color": "#RGB(255,99,99)"}
             }
         )
+        st.markdown(
+                f"""
+                <div style="position: relative; height: 1rem;">
+                <div style="position: absolute; right: 0rem; bottom: 0rem; color: gray;">
+                    {f"User's IP address: {user_ip}"} views
+                        </div>
+                </div>
+                """,
+                unsafe_allow_html=True
+                )
 
 if __name__ == "__main__":
     main()
