@@ -6,6 +6,8 @@ pandas
 seaborn
 openpyxl
 streamlit_float
+fastapi
+uvicorn
 requests
 streamlit_analytics
 streamlit_server_state
