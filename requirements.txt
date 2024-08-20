@@ -8,3 +8,4 @@ openpyxl
 streamlit_float
 requests
 streamlit_analytics
+streamlit_server_state
