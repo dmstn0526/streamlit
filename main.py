@@ -6717,10 +6717,8 @@ def main() :
     # Only increment the visit count if it hasn't been counted yet in this session
     if not st.session_state.visit_counted and user_ip != "Unable to retrieve IP address":
         with server_state_lock['visitor_count']:
-            if user_ip in server_state.visitor_count:
+            if user_ip not in server_state.visitor_count:
                 server_state.visitor_count[user_ip] += 1
-            else:
-                server_state.visitor_count[user_ip] = 1
         # Mark the current session as counted
         st.session_state.visit_counted = True
 
