@@ -6740,7 +6740,9 @@ def main() :
                 f"""
                 <div style="position: relative; height: 1rem;">
                 <div style="position: absolute; right: 0rem; bottom: 0rem; color: gray;">
-                    {f"Total number of unique visitors: {total_visitors}"}
+                    <p>{f"User's IP address: {user_ip}\n"}</p>
+                    <p>{f"You have visited {server_state.visitor_count[user_ip]} times.\n"} views</p>
+                    <p>{f"Total number of unique visitors: {total_visitors}"}</p>
                         </div>
                 </div>
                 """,
