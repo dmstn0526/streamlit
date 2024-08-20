@@ -21,10 +21,11 @@ import requests
 
 def get_ip():
     try:
-        response = requests.get('https://api.ipify.org?format=json')
+        response = requests.get('https://api.ipify.org?format=json', timeout=5)
+        response.raise_for_status()
         ip_info = response.json()
         return ip_info.get('ip', 'Unable to retrieve IP address')
-    except Exception as e:
+    except requests.RequestException as e:
         return f"Error: {str(e)}"
 
 class IndexAllocator:
@@ -6705,10 +6706,14 @@ def main() :
     page, topic, chapter = init_session_state()
     user_ip = get_ip()
     if 'visitor_count' not in server_state:
-        server_state.visitor_count = {}  # Initialize the visitor count dictionary
+        server_state.visitor_count = {}
+
+    # Initialize the visit-tracking flag in session state
     if 'visit_counted' not in st.session_state:
         st.session_state.visit_counted = False
-    if not st.session_state.visit_counted:
+
+    # Only increment the visit count if it hasn't been counted yet in this session
+    if not st.session_state.visit_counted and user_ip != "Unable to retrieve IP address":
         with server_state_lock['visitor_count']:
             if user_ip in server_state.visitor_count:
                 server_state.visitor_count[user_ip] += 1
@@ -6716,12 +6721,6 @@ def main() :
                 server_state.visitor_count[user_ip] = 1
         # Mark the current session as counted
         st.session_state.visit_counted = True
-#     # Update the visit count for the current IP address
-#     with server_state_lock['visitor_count']:
-#         if user_ip in server_state.visitor_count:
-#             server_state.visitor_count[user_ip] += 1
-#         else:
-#             server_state.visitor_count[user_ip] = 1
 
     total_visitors = len(server_state.visitor_count)
 
