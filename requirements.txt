@@ -7,3 +7,4 @@ seaborn
 openpyxl
 streamlit_float
 requests
+streamlit_analytics
