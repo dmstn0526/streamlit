@@ -6713,7 +6713,7 @@ def main() :
             server_state.visitor_count[user_ip] += 1
         else:
             server_state.visitor_count[user_ip] = 1
-            
+
     total_visitors = len(server_state.visitor_count)
 
     if page == 'page_topic':
@@ -6740,11 +6740,11 @@ def main() :
                 f"""
                 <div style="position: relative; height: 1rem;">
                 <div style="position: absolute; right: 0rem; bottom: 0rem; color: gray;">
-                    {f"User's IP address: {user_ip}"}
+                    {f"User's IP address: {user_ip}\n"}
                         </div>
                 </div>
                 <div style="position: absolute; right: 0rem; bottom: 0rem; color: gray;">
-                    {f"You have visited {server_state.visitor_count[user_ip]} times."} views
+                    {f"You have visited {server_state.visitor_count[user_ip]} times.\n"} views
                         </div>
                 </div>
                 <div style="position: absolute; right: 0rem; bottom: 0rem; color: gray;">
